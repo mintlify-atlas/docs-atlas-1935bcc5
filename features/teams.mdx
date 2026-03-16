@@ -1,0 +1,133 @@
+---
+title: "Teams"
+description: "Join or create teams and compete in team tournaments"
+---
+
+Teams let players group together around a shared interest, club, or federation. Teams have their own page, chat, member list, forum category, and can organize team tournaments and team battles.
+
+Browse all teams at [lidraughts.org/team](https://lidraughts.org/team).
+
+## Creating a team
+
+<Steps>
+  <Step title="Go to the team creation form">
+    Navigate to `/team/new`. You must be logged in.
+  </Step>
+  <Step title="Fill in the details">
+    Provide a team name, optional location, and description. Choose whether membership is **open** (anyone can join immediately) or **closed** (requires approval).
+  </Step>
+  <Step title="Submit">
+    Solve the CAPTCHA and submit. The team URL slug is derived from the name.
+  </Step>
+</Steps>
+
+<Warning>
+  You can only create **one team per week**. Coaches and staff with the `ManageTeam` permission are exempt from this limit.
+</Warning>
+
+## Joining a team
+
+How you join a team depends on whether it is open or closed:
+
+<Tabs>
+  <Tab title="Open team">
+    Click **Join** on the team page. You are added immediately. POST to `/team/{id}/join`.
+  </Tab>
+  <Tab title="Closed team">
+    Click **Apply** to submit a join request. You are prompted to write a message explaining why you want to join (`/team/{id}/request/new`). The team leader reviews the request at `/team/requests` and can accept or decline.
+  </Tab>
+</Tabs>
+
+You can cancel a pending request or leave a team at any time via `/team/{id}/quit`.
+
+<Info>
+  You can subscribe to or unsubscribe from a team's PM notifications via `POST /team/{teamId}/subscribe`.
+</Info>
+
+## Team management
+
+The team creator (owner) has access to administrative actions:
+
+<CardGroup cols={2}>
+  <Card title="Edit team" icon="pen">
+    Update the name, description, location, open/closed status, and chat settings at `/team/{id}/edit`
+  </Card>
+  <Card title="Kick a member" icon="user-minus">
+    Remove a member from the team at `/team/{id}/kick`
+  </Card>
+  <Card title="Change owner" icon="arrow-right-arrow-left">
+    Transfer ownership to another member at `/team/{id}/changeOwner`
+  </Card>
+  <Card title="PM all members" icon="envelope">
+    Send a private message to all subscribed members at `/team/{id}/pm-all`
+  </Card>
+</CardGroup>
+
+### Kicking members
+
+The owner can remove any member from the team:
+
+- Via the kick form at `GET /team/{id}/kick` (select from a list)
+- Via the API at `POST /team/{id}/kick/{user}` (requires the `Team.Write` OAuth scope and team ownership)
+
+Kicks by non-creator moderators are logged in the mod log.
+
+### Changing ownership
+
+To transfer team ownership, go to `/team/{id}/changeOwner` and select a current member. The previous owner remains a member. Ownership changes are logged.
+
+## Team messaging (PM all)
+
+Team owners can send a private message to all members who have **subscribed** to team messages:
+
+- Navigate to `GET /team/{id}/pm-all`
+- Compose the message and submit via `POST /team/{id}/pm-all`
+- The message is automatically appended with a link back to the team page
+
+<Warning>
+  PM-all is rate-limited to **6 messages per 24 hours** per team leader.
+</Warning>
+
+## Team tournaments and team battles
+
+Teams can host tournaments in two formats:
+
+<Tabs>
+  <Tab title="Team tournaments">
+    Standard arena or Swiss tournaments restricted to team members. Create via `/tournament/new` and associate a team. The team's upcoming tournaments are shown on the team page and in the PM-all form.
+  </Tab>
+  <Tab title="Team battles">
+    Multiple teams compete head-to-head, with each team's score tallied from its top players. Create via `/tournament/team-battle/new/{teamId}` or edit an existing battle at `/tournament/team-battle/edit/{id}`.
+  </Tab>
+</Tabs>
+
+All tournaments associated with a team are listed at `/team/{id}/tournaments`.
+
+## WFD integration
+
+Certain teams are designated as **WFD (World Draughts Federation)** teams. These teams have additional features:
+
+- Members can have WFD player profiles attached to their Lidraughts account
+- The owner (or a user with the `ManageWfd` permission) can edit WFD profiles at `/team/{id}/wfd/{userId}/profile`
+- WFD team members are displayed with their official federation names where applicable
+- WFD teams do not show team battle tournaments in the PM-all form
+
+<Info>
+  WFD status is set by Lidraughts staff. The `isWfd` flag on a team enables the WFD profile management routes.
+</Info>
+
+## Team chat
+
+If the team's `chat` setting is enabled, members can chat on the team page in real time via WebSocket (`/team/{id}/socket/v{apiVersion}`). Kid-mode accounts cannot access team chats.
+
+## Team API
+
+The following public API endpoints are available for teams:
+
+| Endpoint | Description |
+|---|---|
+| `GET /api/team/all` | Paginated list of all teams by popularity |
+| `GET /api/team/search?text=` | Search teams by name |
+| `GET /api/team/:id` | Team details including joined/requested status |
+| `GET /api/team/:id/users` | Stream of team member user objects |
+| `GET /api/team/of/:username` | All teams a user belongs to |

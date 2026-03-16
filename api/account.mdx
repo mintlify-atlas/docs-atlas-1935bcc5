@@ -1,0 +1,264 @@
+---
+title: "Account"
+description: "Access and manage your Lidraughts account via API"
+---
+
+All account endpoints require authentication. Include a `Bearer` token in the `Authorization` header.
+
+## Get your profile
+
+```
+GET /api/account
+```
+
+Returns the public and private profile of the authenticated user. No specific scope is required beyond a valid token.
+
+### Response fields
+
+<ResponseField name="id" type="string">
+  The user's ID (lowercase username).
+</ResponseField>
+
+<ResponseField name="username" type="string">
+  The user's display name with original casing.
+</ResponseField>
+
+<ResponseField name="perfs" type="object">
+  Performance ratings by variant and time control.
+</ResponseField>
+
+<ResponseField name="createdAt" type="integer">
+  Account creation timestamp (Unix milliseconds).
+</ResponseField>
+
+<ResponseField name="seenAt" type="integer">
+  Last seen timestamp (Unix milliseconds).
+</ResponseField>
+
+<ResponseField name="playTime" type="object">
+  Total time spent playing.
+  <Expandable title="properties">
+    <ResponseField name="total" type="integer">Total play time in seconds.</ResponseField>
+    <ResponseField name="tv" type="integer">Time spent on TV in seconds.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="url" type="string">
+  Profile URL.
+</ResponseField>
+
+<ResponseField name="nbFollowing" type="integer">
+  Number of users this account follows.
+</ResponseField>
+
+<ResponseField name="nbFollowers" type="integer">
+  Number of followers.
+</ResponseField>
+
+<ResponseField name="count" type="object">
+  Game counts by result type.
+</ResponseField>
+
+### Example
+
+```bash
+curl https://lidraughts.org/api/account \
+  -H "Authorization: Bearer your_token"
+```
+
+---
+
+## Get games being played
+
+```
+GET /api/account/playing
+```
+
+Returns the ongoing games of the authenticated user (up to 50).
+
+### Query parameters
+
+<ParamField query="nb" type="integer">
+  Number of games to return (maximum 50, defaults to 9).
+</ParamField>
+
+### Response fields
+
+<ResponseField name="nowPlaying" type="array">
+  Array of ongoing game objects.
+  <Expandable title="properties">
+    <ResponseField name="gameId" type="string">Game ID.</ResponseField>
+    <ResponseField name="fullId" type="string">Full game + player token ID.</ResponseField>
+    <ResponseField name="color" type="string">Your color: `white` or `black`.</ResponseField>
+    <ResponseField name="fen" type="string">Current board position in FEN.</ResponseField>
+    <ResponseField name="hasMoved" type="boolean">Whether you have made at least one move.</ResponseField>
+    <ResponseField name="isMyTurn" type="boolean">Whether it is your turn.</ResponseField>
+    <ResponseField name="opponent" type="object">Opponent information (id, username, rating).</ResponseField>
+    <ResponseField name="perf" type="string">Performance type key.</ResponseField>
+    <ResponseField name="rated" type="boolean">Whether the game is rated.</ResponseField>
+    <ResponseField name="secondsLeft" type="integer">Seconds left on your clock (if applicable).</ResponseField>
+    <ResponseField name="source" type="string">Game source (e.g. `friend`, `ai`, `lobby`).</ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example
+
+```bash
+curl https://lidraughts.org/api/account/playing \
+  -H "Authorization: Bearer your_token"
+```
+
+---
+
+## Get account email
+
+```
+GET /api/account/email
+```
+
+Returns the email address associated with the authenticated account.
+
+### Required scopes
+
+`email:read`
+
+### Response fields
+
+<ResponseField name="email" type="string">
+  The account email address.
+</ResponseField>
+
+### Example
+
+```bash
+curl https://lidraughts.org/api/account/email \
+  -H "Authorization: Bearer your_token"
+```
+
+---
+
+## Get kid mode status
+
+```
+GET /api/account/kid
+```
+
+Returns whether kid mode is enabled for the account.
+
+### Required scopes
+
+`preference:read`
+
+### Response fields
+
+<ResponseField name="kid" type="boolean">
+  `true` if kid mode is enabled.
+</ResponseField>
+
+### Example
+
+```bash
+curl https://lidraughts.org/api/account/kid \
+  -H "Authorization: Bearer your_token"
+```
+
+---
+
+## Set kid mode
+
+```
+POST /api/account/kid
+```
+
+Enables or disables kid mode for the account.
+
+### Required scopes
+
+`preference:write`
+
+### Query parameters
+
+<ParamField query="v" type="boolean" required>
+  Pass `true` to enable kid mode, `false` to disable it.
+</ParamField>
+
+### Example
+
+```bash
+# Enable kid mode
+curl -X POST "https://lidraughts.org/api/account/kid?v=true" \
+  -H "Authorization: Bearer your_token"
+```
+
+---
+
+## Get preferences
+
+```
+GET /api/account/preferences
+```
+
+Returns the user's game and interface preferences.
+
+### Required scopes
+
+`preference:read`
+
+### Example
+
+```bash
+curl https://lidraughts.org/api/account/preferences \
+  -H "Authorization: Bearer your_token"
+```
+
+---
+
+## Stream incoming events
+
+```
+GET /api/stream/event
+```
+
+Opens a persistent NDJSON stream of real-time events for the authenticated user. Use this to receive incoming challenges and game start notifications without polling.
+
+### Required scopes
+
+`challenge:read` and `bot:play`
+
+<Note>
+Keep this connection open for as long as your application is running. The server will send a newline every few seconds to keep the connection alive even when there are no events.
+</Note>
+
+### Event types
+
+**`challenge`** — An incoming challenge.
+
+<ResponseField name="type" type="string">
+  Always `challenge`.
+</ResponseField>
+
+<ResponseField name="challenge" type="object">
+  The challenge object. See [Challenges](/api/challenges) for field details.
+</ResponseField>
+
+**`gameStart`** — A game has started.
+
+<ResponseField name="type" type="string">
+  Always `gameStart`.
+</ResponseField>
+
+<ResponseField name="game" type="object">
+  Object containing the `id` of the game that started.
+</ResponseField>
+
+### Example
+
+```bash
+curl https://lidraughts.org/api/stream/event \
+  -H "Authorization: Bearer your_token"
+```
+
+```json
+{"type":"challenge","challenge":{"id":"abcd1234","challenger":{"id":"playerone","name":"PlayerOne","rating":1500},"variant":{"key":"standard","name":"Standard"},"timeControl":{"type":"clock","limit":300,"increment":3},"color":"random","status":"created"}}
+{"type":"gameStart","game":{"id":"efgh5678"}}
+```

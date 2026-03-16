@@ -1,0 +1,113 @@
+---
+title: "Patron program"
+description: "Support Lidraughts and keep it free for everyone"
+---
+
+Lidraughts is free, open-source, and ad-free. It is kept alive entirely by voluntary donations from the community. Supporters are called **patrons**.
+
+<Note>
+  Becoming a patron is optional. Every feature on Lidraughts is available to all users, whether they donate or not.
+</Note>
+
+---
+
+## What patrons receive
+
+Patrons receive a small visual recognition for their support:
+
+- A **patron badge** (a wing icon) displayed next to their username in profiles, leaderboards, and game pages
+- The satisfaction of keeping Lidraughts running and free for everyone
+
+<Info>
+  There are no gameplay advantages, premium game modes, or paywalled features. Patronage is purely a way to say thank you.
+</Info>
+
+---
+
+## How to become a patron
+
+Visit [lidraughts.org/patron](https://lidraughts.org/patron) to make a contribution.
+
+<Tabs>
+  <Tab title="Monthly support (Stripe)">
+    <Steps>
+      <Step title="Choose a monthly amount">
+        Select one of the suggested amounts (€5, €10, €20, €50) or enter a custom value.
+      </Step>
+      <Step title="Enter your payment details">
+        Provide your card details via the Stripe-powered checkout form. Your email address is optional but recommended for Stripe receipts.
+      </Step>
+      <Step title="Confirm the subscription">
+        Submit the form. Your account is upgraded to patron status immediately and renews automatically each month.
+      </Step>
+    </Steps>
+
+    Your monthly amount can be adjusted at any time from the patron page using the **switch plan** option (`POST /patron/switch`).
+  </Tab>
+  <Tab title="One-time support (Stripe)">
+    Select the **one-time** frequency option on the patron page and provide your card details. Your patron badge remains active for approximately one month after the charge.
+  </Tab>
+  <Tab title="PayPal">
+    Lidraughts also accepts payments through PayPal. The PayPal option appears on the patron page alongside Stripe. Both one-time and recurring PayPal subscriptions are supported.
+  </Tab>
+</Tabs>
+
+<Info>
+  Payments are processed in **euros (EUR)**. The minimum contribution is €1.00; the maximum per transaction is €100,000.
+</Info>
+
+---
+
+## Lifetime patron status
+
+A single contribution of **€250 or more** (i.e. 25,000 cents) grants lifetime patron status. Lifetime patrons keep their badge permanently, regardless of future payment activity.
+
+---
+
+## Canceling a subscription
+
+To cancel a recurring monthly subscription:
+
+<Steps>
+  <Step title="Go to the patron page">
+    Navigate to `/patron` while logged in. If you have an active Stripe subscription, your current plan details are shown.
+  </Step>
+  <Step title="Cancel the subscription">
+    Click **Cancel** (submits to `POST /patron/cancel`). Your patron badge remains active until the end of the current billing period.
+  </Step>
+</Steps>
+
+<Warning>
+  Cancellation stops future charges but does not trigger a refund for the current period.
+</Warning>
+
+---
+
+## Patron list
+
+The patron page shows two public lists:
+
+- **Recent supporters** — users who contributed recently
+- **Top supporters** — users with the highest cumulative support
+
+Your appearance on these lists is automatic and tied to your account.
+
+---
+
+## Frequently asked questions
+
+<Accordion title="Is my payment information stored on Lidraughts servers?">
+  No. Card details are handled entirely by Stripe or PayPal and never pass through Lidraughts servers. Lidraughts only stores a Stripe customer ID or PayPal subscription ID to identify your account.
+</Accordion>
+
+<Accordion title="Can I donate on behalf of someone else?">
+  One-time contributions can be made without a Lidraughts account. The patron badge, however, is only awarded to an account that is logged in at the time of the donation.
+</Accordion>
+
+<Accordion title="What happens if my card is declined?">
+  Stripe will retry failed charges automatically. If a charge cannot be collected, your patron status will eventually expire. You can update your payment method directly in Stripe.
+</Accordion>
+
+<Accordion title="I donated but my badge is not showing.">
+  Patron status is synced automatically each time you visit the patron page. If your badge is still missing after a few minutes, visit `/patron` to trigger a manual sync.
+</Accordion>

@@ -1,0 +1,211 @@
+---
+title: "Preferences"
+description: "Customize your Lidraughts experience"
+---
+
+All user preferences are accessible under `/account/preferences/:categ`. Changes are applied immediately and persisted to your account.
+
+Preferences are organised into four categories:
+
+<CardGroup cols={2}>
+  <Card title="Game display" icon="display" href="/account/preferences#game-display">
+    Board theme, piece set, animation, coordinates, and visual options.
+  </Card>
+  <Card title="Draughts clock" icon="clock" href="/account/preferences#draughts-clock">
+    Clock display, sound, tenths of seconds, and more-time settings.
+  </Card>
+  <Card title="Game behavior" icon="gamepad" href="/account/preferences#game-behavior">
+    Move input, premoves, takebacks, resignation confirmation, and more.
+  </Card>
+  <Card title="Privacy" icon="lock" href="/account/preferences#privacy">
+    Challenge, messaging, study invitations, and insight-sharing controls.
+  </Card>
+</CardGroup>
+
+---
+
+## Game display
+
+Route: `GET /account/preferences/game-display`
+
+<Accordion title="Board theme">
+  Choose the colour scheme of the board. Available themes: `blue`, `blue2`, `blue3`, `canvas`, `wood`, `wood2`, `wood3`, `maple` (default), `brown`, `brown2`, `leather`, `match`, `ic`, `green`, `marble`, `grey`, `metal`, `olive`, `purple`.
+
+  You can also switch to a **transparent** or **dark** background, or provide a custom background image URL.
+</Accordion>
+
+<Accordion title="Piece set">
+  Choose the visual style of the pieces. Available piece sets: `wide_crown` (default), `wide`, `narrow_edge`, `narrow`, `fabirovsky`, `flat`, `phin`, `ringed`, `basic`, `frisianovsky`, `eightbit`.
+</Accordion>
+
+<Accordion title="Coordinate system">
+  Switch between **Fieldnumbers** (1–50 notation) and **Algebraic** notation for board coordinates.
+</Accordion>
+
+<Accordion title="Coordinates display">
+  Show board coordinate labels: **No**, **Inside the board**, or **Outside the board** (default).
+</Accordion>
+
+<Accordion title="Piece animation">
+  Control the speed of piece movement animations: **None**, **Fast**, **Normal** (default), or **Slow**.
+</Accordion>
+
+<Accordion title="Show captured pieces">
+  Display a tray of captured pieces alongside the board (enabled by default).
+</Accordion>
+
+<Accordion title="King move counter">
+  Show the king-move counter used in endgame rules (enabled by default).
+</Accordion>
+
+<Accordion title="Move highlights">
+  Highlight the last move on the board (enabled by default).
+</Accordion>
+
+<Accordion title="Destination squares">
+  Highlight legal destination squares when a piece is selected (enabled by default).
+</Accordion>
+
+<Accordion title="Game result notation">
+  Choose how results are displayed: standard **1-0 / ½-½ / 0-1** or draughts-style **2-0 / 1-1 / 0-2** (default).
+</Accordion>
+
+<Accordion title="Move replay">
+  Automatically replay moves after a game ends: **Never**, **On slow games**, or **Always** (default).
+</Accordion>
+
+<Accordion title="Zen mode">
+  Hide distracting UI elements during a game. Can also be toggled quickly via `POST /pref/zen`.
+</Accordion>
+
+<Accordion title="Blindfold mode">
+  Hide the pieces during play for a training challenge.
+</Accordion>
+
+<Accordion title="Board resize handle">
+  Show the drag handle for resizing the board: **Never**, **On initial position** (default), or **Always**.
+</Accordion>
+
+---
+
+## Draughts clock
+
+Route: `GET /account/preferences/draughts-clock`
+
+<Accordion title="Clock tenths of seconds">
+  Show tenths of a second on the clock: **Never**, **When time remaining < 10 seconds** (default), or **Always**.
+</Accordion>
+
+<Accordion title="Clock bar">
+  Display a graphical bar showing remaining time (enabled by default).
+</Accordion>
+
+<Accordion title="Clock ticking sound">
+  Play a ticking sound when the clock is running low (enabled by default).
+</Accordion>
+
+<Accordion title="Give more time">
+  Allow giving extra time to your opponent in correspondence games: **Never**, **In casual games only** (default in casual), or **Always**.
+</Accordion>
+
+---
+
+## Game behavior
+
+Route: `GET /account/preferences/game-behavior`
+
+<Accordion title="Move input method">
+  How you move pieces: **Click two squares**, **Drag a piece**, or **Both clicks and drag** (default).
+</Accordion>
+
+<Accordion title="Premove">
+  Allow queuing a move before your opponent has finished moving (enabled by default).
+</Accordion>
+
+<Accordion title="Takeback">
+  Allow your opponent to request a takeback (undo): **Never**, **In casual games only**, or **Always** (default).
+</Accordion>
+
+<Accordion title="Auto-claim threefold repetition">
+  Automatically claim a draw on threefold repetition: **Never**, **Always**, or **When time remaining < 30 seconds** (default).
+</Accordion>
+
+<Accordion title="Submit move confirmation">
+  Show a confirmation button before committing a move: **Never**, **Correspondence games only** (default), **Correspondence and unlimited**, or **Always**.
+</Accordion>
+
+<Accordion title="Confirm resignation">
+  Ask for confirmation before resigning (enabled by default).
+</Accordion>
+
+<Accordion title="Keyboard move input">
+  Enable moving pieces by typing square numbers on the keyboard (disabled by default).
+</Accordion>
+
+<Accordion title="Full capture enforcement">
+  Require the longest capture sequence in variants where this is mandatory (disabled by default).
+</Accordion>
+
+---
+
+## Privacy
+
+Route: `GET /account/preferences/privacy`
+
+<Accordion title="Follow activity">
+  Let followed players see when you are active (enabled by default).
+</Accordion>
+
+<Accordion title="Who can challenge you">
+  Control who may send you game challenges: **Never**, **If rating is ±300**, **Only friends**, or **Always** (default).
+</Accordion>
+
+<Accordion title="Who can message you">
+  Control who may send you private messages: **Never**, **Only friends**, or **Always** (default).
+</Accordion>
+
+<Accordion title="Who can invite you to studies">
+  Control who may invite you to collaborative studies: **Never**, **Only friends**, or **Always** (default).
+</Accordion>
+
+<Accordion title="Share your game insights">
+  Allow others to view your game-analysis insights: **With nobody**, **With friends** (default), or **With everybody**.
+</Accordion>
+
+---
+
+## Additional customization
+
+### Sound set
+
+Change the move and game-event sounds via `POST /pref/soundSet`. Available sound sets: **Silent**, **Standard** (default), **Piano**, **NES**, **SFX**, **Futuristic**, **Robot**, **Pentatonic**, **Speech**.
+
+### Language
+
+Select the interface language at `POST /translation/select`. Lidraughts will remember your choice across sessions.
+
+### Profile
+
+Edit your public profile at `/account/profile`:
+
+- **Bio** — a short description shown on your profile page
+- **Location** — city or country
+- **Country flag** — shown next to your username in leaderboards
+- **FIDE rating** — your over-the-board rating
+- **Title** — official draughts or FMJD title (requires moderator verification)
+
+### Username casing
+
+Adjust the capitalisation of your username (not the username itself) at `/account/username`.
+
+---
+
+## API access to preferences
+
+```bash
+# Read your preferences
+curl https://lidraughts.org/api/account/preferences \
+  -H "Authorization: Bearer your_token_here"
+```
+
+Reading preferences requires the `preference:read` OAuth scope. Writing preferences requires `preference:write`.

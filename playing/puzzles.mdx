@@ -1,0 +1,194 @@
+---
+title: "Tactics puzzles"
+description: "Improve your draughts calculation with Lidraughts puzzles"
+---
+
+Lidraughts offers a **tactics puzzle system** to help players sharpen their calculation skills. Puzzles are sourced from real games played on Lidraughts, and each variant has its own dedicated puzzle set.
+
+<CardGroup cols={2}>
+  <Card title="Standard puzzles" icon="puzzle-piece" href="https://lidraughts.org/training">
+    Solve Standard (10×10 international) tactics puzzles
+  </Card>
+  <Card title="Daily puzzle" icon="calendar" href="https://lidraughts.org/training/daily">
+    A fresh hand-picked puzzle every day
+  </Card>
+</CardGroup>
+
+---
+
+## How puzzles work
+
+Each puzzle presents a position from a real game and asks you to find the best sequence of moves. You play the moves on the board; correct moves advance the puzzle, while incorrect moves prompt you to try again.
+
+- Puzzles include **forced captures**, **multi-jump combinations**, and **mating nets**.
+- Each puzzle records whether it is a **mate** (king capture sequence) or a **tactic** (piece-winning combination).
+- Puzzles have a **rating** (using the Glicko-2 system). Solving a puzzle above your rating increases your puzzle rating; failing one below your rating decreases it.
+
+---
+
+## Variants with puzzles
+
+Lidraughts maintains **separate puzzle collections** for each supported variant. You can access variant puzzles at `/training/:variant`.
+
+| Variant | Puzzle URL |
+|---|---|
+| Standard | `/training` or `/training/standard` |
+| Frisian | `/training/frisian` |
+| Russian | `/training/russian` |
+
+<Note>
+  Puzzle collections exist for Standard, Frisian, and Russian. Other variants may have puzzle sets added as more games are played and curated.
+</Note>
+
+Variant puzzles are fully independent — your Frisian puzzle rating does not affect your Standard puzzle rating.
+
+---
+
+## Puzzle rating system
+
+Puzzle ratings use **Glicko-2**, the same system used for game ratings.
+
+- Every puzzle has its own `(rating, rating deviation, volatility)` triple, stored as `PuzzlePerf`.
+- Every player has a separate puzzle rating per variant.
+- Solving a puzzle **above your rating**: your rating goes up; the puzzle's rating goes down slightly.
+- Failing a puzzle **below your rating**: your rating goes down; the puzzle's rating goes up slightly.
+- Ratings are bounded: player puzzle ratings are capped between **900 and 2300** for puzzle selection purposes.
+
+### Puzzle selection logic
+
+When you request a new puzzle, the selector:
+
+1. Looks at your current puzzle rating.
+2. Finds puzzles within a **rating tolerance window** (±200 to ±300 points, widening if no puzzle is found).
+3. Picks the next puzzle in sequence from your personal puzzle history, so you work through the puzzle database progressively rather than repeating puzzles.
+4. The tolerance can expand up to a maximum of **±1500 points** to always find a puzzle.
+
+---
+
+## Daily puzzle
+
+The **daily puzzle** (`/training/daily`) is a single featured puzzle that refreshes every 24 hours. It is selected automatically from puzzles with a high vote ratio that have not yet been used as a daily.
+
+- Available to **anonymous users** as well as logged-in users.
+- Solving the daily puzzle counts toward your puzzle rating if you are logged in.
+- The daily puzzle is also displayed on the Lidraughts homepage.
+
+<Tip>
+  The daily puzzle is always from the Standard variant. Visit `/training/frisian` or `/training/russian` for variant-specific daily challenges.
+</Tip>
+
+---
+
+## Voting on puzzles
+
+After solving (or failing) a puzzle you can vote it **up** or **down** to rate its quality.
+
+- Votes are aggregated into an `AggregateVote` with up-count, down-count, total count, and a **ratio** (`(up - down) / (up + down) × 100`).
+- Puzzles with a ratio below **-50** and more than **30 votes** are disabled and will no longer appear in the regular rotation.
+- Voting helps surface the best puzzles and retire low-quality or incorrect ones.
+
+---
+
+## Batch solving (API)
+
+Lidraughts supports **batch puzzle solving** for external tools and mobile applications.
+
+### Batch select
+
+```
+GET /training/:variant/batch
+```
+
+Returns a set of puzzles matched to your current rating. The batch size and starting position can be specified with query parameters.
+
+### Batch solve
+
+```
+POST /training/:variant/batch
+```
+
+Submit solutions for a batch of puzzles at once. Each solution specifies the puzzle ID and whether the attempt was a win or loss. The server updates your rating and puzzle head position in one request.
+
+<Info>
+  Batch solving is designed for **offline-capable clients** (such as mobile apps) that solve puzzles while disconnected and sync results when back online.
+</Info>
+
+---
+
+## Puzzle structure
+
+Each puzzle in the database records:
+
+| Field | Description |
+|---|---|
+| `id` | Integer puzzle identifier |
+| `variant` | The draughts variant (Standard, Frisian, Russian, …) |
+| `gameId` | The source game on Lidraughts |
+| `fen` | The board position when the puzzle starts |
+| `history` | The last move played before the puzzle position |
+| `lines` | The tree of correct and incorrect response moves |
+| `depth` | Minimum solution depth |
+| `color` | Which side is to move (and must solve) |
+| `mate` | Whether the puzzle is a forced capture-of-king sequence |
+| `perf` | Puzzle rating (Glicko-2) |
+| `vote` | Aggregate community vote |
+| `attempts` | Total number of times the puzzle has been attempted |
+
+### Move tree
+
+The `lines` field is a tree structure where each node is one of:
+
+- **Win** — this move completes the puzzle correctly.
+- **Retry** — this move is incorrect; the player must try again.
+- **Node** — this move is correct so far; the tree continues with the opponent's response.
+
+---
+
+## How puzzles are generated
+
+Puzzles are extracted from games played on Lidraughts using an automated pipeline:
+
+<Steps>
+  <Step title="Game analysis">
+    Completed games are analysed by the Scan 3.1 engine (via draughtsnet) to identify tactical moments — positions where one side has a forced winning sequence.
+  </Step>
+  <Step title="Puzzle extraction">
+    Positions with forced capture sequences or other decisive tactics are extracted and formatted with the correct `lines` tree.
+  </Step>
+  <Step title="Import">
+    Puzzles are imported via `POST /training/api/puzzle` and assigned a variant, initial rating, and default vote.
+  </Step>
+  <Step title="Community curation">
+    Players vote puzzles up or down. Puzzles with too many negative votes are disabled. High-ratio puzzles are prioritised in the daily puzzle rotation.
+  </Step>
+</Steps>
+
+---
+
+## Puzzle editor
+
+Lidraughts includes a **puzzle editor** accessible at [lidraughts.org/analysis/puzzle](https://lidraughts.org/analysis/puzzle). You can:
+
+- Parse a PDN game or position to construct a puzzle manually.
+- Preview how the puzzle will appear to solvers.
+- Export the puzzle definition for submission.
+
+---
+
+## Frequently asked questions
+
+<Accordion title="Can I solve puzzles without an account?">
+  Yes. Anonymous users can solve puzzles, but their results are not saved and do not affect any rating. Create a free account to track your progress.
+</Accordion>
+
+<Accordion title="Why does my puzzle rating go down even when I solve puzzles correctly?">
+  If you are consistently solving puzzles rated well below your current rating, those correct solutions contribute very little upward movement. The Glicko-2 system expects you to solve puzzles near your rating level for significant gains.
+</Accordion>
+
+<Accordion title="How are Frisian puzzles different from Standard puzzles?">
+  Frisian puzzles involve the additional horizontal and vertical capture directions unique to Frisian draughts. The selection algorithm (rating matching, tolerance expansion) is identical, but the puzzle pool is drawn exclusively from Frisian games.
+</Accordion>
+
+<Accordion title="What does 'mate' mean in a draughts puzzle?">
+  In Lidraughts puzzles, `mate = true` indicates a sequence where the opponent's king (or all remaining pieces) is captured by force — the draughts equivalent of a checkmate. These puzzles always have a definitive forced winning line.
+</Accordion>

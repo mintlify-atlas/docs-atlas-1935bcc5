@@ -1,0 +1,90 @@
+---
+title: "Authentication"
+description: "Authenticate with the Lidraughts API"
+---
+
+Some Lidraughts API endpoints are fully public and require no credentials. Others require authentication to access private data or to perform write actions.
+
+## Public endpoints
+
+The following data is accessible without any token:
+
+- User profiles, ratings, and activity
+- Public game exports
+- Tournament listings and results
+- Team information
+- User online status and crosstables
+
+For these endpoints, simply make unauthenticated requests:
+
+```bash
+curl https://lidraughts.org/api/user/playerone
+```
+
+## Bearer token authentication
+
+For endpoints that require authentication, include your token as a **Bearer** token in the `Authorization` header:
+
+```bash
+curl https://lidraughts.org/api/account \
+  -H "Authorization: Bearer your_token_here"
+```
+
+You can create personal access tokens from your account settings at `https://lidraughts.org/account/oauth/token`.
+
+<Warning>
+Treat your access token like a password. Do not share it or commit it to source control. If a token is compromised, revoke it immediately from your account settings.
+</Warning>
+
+## Personal access tokens
+
+Personal access tokens are the simplest authentication method. They are long-lived tokens associated with your account and tied to one or more scopes that limit what the token can do.
+
+To create one:
+1. Go to `https://lidraughts.org/account/oauth/token/create`
+2. Give the token a description
+3. Select the scopes you need
+4. Copy the token — it will only be shown once
+
+## OAuth2 for third-party apps
+
+If you are building an application that authenticates on behalf of other users, use the standard OAuth2 authorization code flow.
+
+1. Register your application at `https://lidraughts.org/account/oauth/app/create`
+2. Redirect the user to the Lidraughts authorization endpoint with your `client_id`, requested `scope`, and `redirect_uri`
+3. After the user approves, exchange the authorization code for an access token
+4. Use the access token in the `Authorization` header as described above
+
+## Available scopes
+
+Scopes limit what an access token is allowed to do. Request only the scopes your application needs.
+
+| Scope key | Name | Description |
+|---|---|---|
+| `preference:read` | Read preferences | Read user preferences |
+| `preference:write` | Write preferences | Update user preferences |
+| `email:read` | Read email address | Read the account email address |
+| `challenge:read` | Read incoming challenges | Stream incoming challenges |
+| `challenge:write` | Create, accept, decline challenges | Create and respond to challenges |
+| `tournament:write` | Create and update tournaments | Create, update, and terminate tournaments |
+| `puzzle:read` | Read puzzle activity | Read puzzle activity history |
+| `team:write` | Join, leave, and manage teams | Join, leave, and manage teams |
+| `bot:play` | Play games with the bot API | Stream and play games as a bot account |
+
+<Note>
+The `bot:play` scope is only usable on accounts that have been upgraded to bot accounts via `POST /api/bot/account/upgrade`.
+</Note>
+
+## Example: authenticated request
+
+```bash
+# Get the authenticated user's profile
+curl https://lidraughts.org/api/account \
+  -H "Authorization: Bearer lip_xxxxxxxxxxxx"
+```
+
+```bash
+# Get the authenticated user's email address (requires email:read scope)
+curl https://lidraughts.org/api/account/email \
+  -H "Authorization: Bearer lip_xxxxxxxxxxxx"
+```

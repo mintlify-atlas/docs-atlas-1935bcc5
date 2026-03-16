@@ -1,0 +1,261 @@
+---
+title: "Games"
+description: "Access and export game data"
+---
+
+Game export endpoints support two output formats:
+
+- **PDN** (Portable Draughts Notation) — the standard draughts game format, equivalent to PGN in chess
+- **JSON** / **NDJSON** — machine-readable JSON
+
+Set the `Accept` header to `application/x-chess-pgn` for PDN output or `application/json` for JSON. For streaming endpoints, JSON output is NDJSON (one JSON object per line).
+
+## Get a single game
+
+```
+GET /api/game/:id
+```
+
+Returns metadata for a single game by its ID.
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The 8-character game ID.
+</ParamField>
+
+### Query parameters
+
+<ParamField query="with_moves" type="boolean">
+  Include the move list.
+</ParamField>
+
+<ParamField query="with_analysis" type="boolean">
+  Include computer analysis if available.
+</ParamField>
+
+<ParamField query="with_fens" type="boolean">
+  Include FEN positions after each move.
+</ParamField>
+
+<ParamField query="with_opening" type="boolean">
+  Include opening name.
+</ParamField>
+
+<ParamField query="with_movetimes" type="boolean">
+  Include move times in milliseconds.
+</ParamField>
+
+### Example
+
+```bash
+curl "https://lidraughts.org/api/game/abcd1234?with_moves=true"
+```
+
+---
+
+## Export a single game (PDN or JSON)
+
+```
+GET /game/export/:gameId
+```
+
+Exports a single game in PDN or JSON format.
+
+### Path parameters
+
+<ParamField path="gameId" type="string" required>
+  The 8-character game ID.
+</ParamField>
+
+### Query parameters
+
+<ParamField query="moves" type="boolean">
+  Include moves. Defaults to `true`.
+</ParamField>
+
+<ParamField query="tags" type="boolean">
+  Include PDN tags. Defaults to `true`.
+</ParamField>
+
+<ParamField query="clocks" type="boolean">
+  Include clock times per move.
+</ParamField>
+
+<ParamField query="evals" type="boolean">
+  Include computer evaluations.
+</ParamField>
+
+<ParamField query="opening" type="boolean">
+  Include opening name.
+</ParamField>
+
+<ParamField query="algebraic" type="boolean">
+  Use algebraic notation in the PDN output.
+</ParamField>
+
+<ParamField query="literate" type="boolean">
+  Include move annotations in human-readable text.
+</ParamField>
+
+### Example
+
+```bash
+# Download as PDN
+curl https://lidraughts.org/game/export/abcd1234
+
+# Download as JSON
+curl https://lidraughts.org/game/export/abcd1234 \
+  -H "Accept: application/json"
+```
+
+---
+
+## Export games by user
+
+```
+GET /api/games/user/:username
+```
+
+Streams all games (or a filtered subset) for a user. Results are streamed as PDN or NDJSON.
+
+An alternate path `GET /games/export/:username` also works.
+
+### Path parameters
+
+<ParamField path="username" type="string" required>
+  The username whose games to export.
+</ParamField>
+
+### Query parameters
+
+<ParamField query="since" type="integer">
+  Only include games created after this timestamp (Unix milliseconds).
+</ParamField>
+
+<ParamField query="until" type="integer">
+  Only include games created before this timestamp (Unix milliseconds).
+</ParamField>
+
+<ParamField query="max" type="integer">
+  Maximum number of games to return.
+</ParamField>
+
+<ParamField query="vs" type="string">
+  Filter to games against a specific opponent username.
+</ParamField>
+
+<ParamField query="rated" type="boolean">
+  Filter by rated (`true`) or casual (`false`) games.
+</ParamField>
+
+<ParamField query="perfType" type="string">
+  Comma-separated list of performance types to filter by (e.g. `frisian,antidraughts`).
+</ParamField>
+
+<ParamField query="color" type="string">
+  Filter to games where the user played as `white` or `black`.
+</ParamField>
+
+<ParamField query="analysed" type="boolean">
+  Filter to games that have a computer analysis.
+</ParamField>
+
+<ParamField query="ongoing" type="boolean">
+  Include currently ongoing games.
+</ParamField>
+
+<ParamField query="moves" type="boolean">
+  Include moves in output. Defaults to `true`.
+</ParamField>
+
+<ParamField query="tags" type="boolean">
+  Include PDN tags. Defaults to `true`.
+</ParamField>
+
+<ParamField query="clocks" type="boolean">
+  Include clock times per move.
+</ParamField>
+
+<ParamField query="evals" type="boolean">
+  Include computer evaluations.
+</ParamField>
+
+<ParamField query="opening" type="boolean">
+  Include opening names.
+</ParamField>
+
+### Example
+
+```bash
+# Export all rated games for a user as PDN
+curl "https://lidraughts.org/api/games/user/playerone?rated=true&moves=true&clocks=true"
+
+# Export as NDJSON
+curl "https://lidraughts.org/api/games/user/playerone" \
+  -H "Accept: application/x-ndjson"
+```
+
+<Note>
+Authenticated users exporting their own games receive a higher throughput limit (50 games/sec) compared to anonymous requests (10 games/sec).
+</Note>
+
+---
+
+## Export games by IDs
+
+```
+POST /games/export/_ids
+```
+
+Exports up to 300 games by their IDs. Send a comma-separated list of IDs in the request body.
+
+### Request body
+
+Plain text, comma-separated game IDs:
+
+```
+abcd1234,efgh5678,ijkl9012
+```
+
+### Query parameters
+
+Accepts the same PDN flags as the user export: `moves`, `tags`, `clocks`, `evals`, `opening`, `algebraic`.
+
+### Example
+
+```bash
+curl -X POST https://lidraughts.org/games/export/_ids \
+  -H "Content-Type: text/plain" \
+  --data "abcd1234,efgh5678"
+```
+
+---
+
+## Stream games by a list of users
+
+```
+POST /api/stream/games-by-users
+```
+
+Opens a persistent NDJSON stream that emits game objects whenever a listed user starts or finishes a game. Up to 300 user IDs can be monitored.
+
+### Request body
+
+Plain text, comma-separated user IDs:
+
+```
+player1,player2,player3
+```
+
+### Example
+
+```bash
+curl -X POST https://lidraughts.org/api/stream/games-by-users \
+  -H "Content-Type: text/plain" \
+  --data "player1,player2"
+```
+
+<Note>
+This stream keeps the HTTP connection open. Each line in the response is a JSON game object. The stream ends when the connection is closed by the client.
+</Note>

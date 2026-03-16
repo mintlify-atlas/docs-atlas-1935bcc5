@@ -1,0 +1,196 @@
+---
+title: "Teams"
+description: "Access team data via the Lidraughts API"
+---
+
+## List all teams
+
+```
+GET /api/team/all
+```
+
+Returns a paginated list of all teams, ordered by popularity.
+
+### Query parameters
+
+<ParamField query="page" type="integer">
+  Page number (1-indexed). Defaults to 1.
+</ParamField>
+
+### Response fields
+
+<ResponseField name="currentPage" type="integer">
+  The current page number.
+</ResponseField>
+
+<ResponseField name="maxPerPage" type="integer">
+  Maximum results per page.
+</ResponseField>
+
+<ResponseField name="currentPageResults" type="array">
+  Array of team objects on this page.
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">Team ID (lowercase, hyphenated).</ResponseField>
+    <ResponseField name="name" type="string">Team display name.</ResponseField>
+    <ResponseField name="description" type="string">Team description.</ResponseField>
+    <ResponseField name="open" type="boolean">Whether the team accepts new members without approval.</ResponseField>
+    <ResponseField name="leader" type="object">The team leader's user object.</ResponseField>
+    <ResponseField name="nbMembers" type="integer">Number of team members.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="nbResults" type="integer">
+  Total number of teams.
+</ResponseField>
+
+<ResponseField name="previousPage" type="integer">
+  Previous page number, or `null` if on the first page.
+</ResponseField>
+
+<ResponseField name="nextPage" type="integer">
+  Next page number, or `null` if on the last page.
+</ResponseField>
+
+### Example
+
+```bash
+curl "https://lidraughts.org/api/team/all?page=1"
+```
+
+---
+
+## Search teams
+
+```
+GET /api/team/search
+```
+
+Searches for teams by name. Returns a paginated list of matching teams. When no search text is provided, returns teams ordered by popularity.
+
+### Query parameters
+
+<ParamField query="text" type="string">
+  Search query. Leave empty to list all teams by popularity.
+</ParamField>
+
+<ParamField query="page" type="integer">
+  Page number (1-indexed). Defaults to 1.
+</ParamField>
+
+### Example
+
+```bash
+curl "https://lidraughts.org/api/team/search?text=frisian&page=1"
+```
+
+---
+
+## Get teams of a user
+
+```
+GET /api/team/of/:username
+```
+
+Returns all teams that the specified user is a member of.
+
+### Path parameters
+
+<ParamField path="username" type="string" required>
+  The username to look up.
+</ParamField>
+
+### Response
+
+Returns a JSON array of team objects.
+
+### Example
+
+```bash
+curl https://lidraughts.org/api/team/of/playerone
+```
+
+---
+
+## Get team info
+
+```
+GET /api/team/:id
+```
+
+Returns information about a specific team.
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The team ID.
+</ParamField>
+
+### Response fields
+
+<ResponseField name="id" type="string">
+  Team ID.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Team display name.
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Team description text.
+</ResponseField>
+
+<ResponseField name="open" type="boolean">
+  Whether the team accepts new members without requiring approval.
+</ResponseField>
+
+<ResponseField name="leader" type="object">
+  The team leader.
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">User ID.</ResponseField>
+    <ResponseField name="name" type="string">Display name.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="nbMembers" type="integer">
+  Total number of team members.
+</ResponseField>
+
+<ResponseField name="joined" type="boolean">
+  Whether the authenticated user is a member. Only present when authenticated.
+</ResponseField>
+
+<ResponseField name="requested" type="boolean">
+  Whether the authenticated user has a pending join request. Only present when authenticated.
+</ResponseField>
+
+### Example
+
+```bash
+curl https://lidraughts.org/api/team/frisian-draughts
+```
+
+---
+
+## Get team members
+
+```
+GET /api/team/:id/users
+```
+
+Streams all members of a team as NDJSON. Each line is a user object.
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The team ID.
+</ParamField>
+
+### Example
+
+```bash
+curl https://lidraughts.org/api/team/frisian-draughts/users
+```
+
+<Note>
+This is a streaming endpoint. The response uses `Content-Type: application/x-ndjson`. Process each line as a separate JSON user object.
+</Note>

@@ -1,0 +1,269 @@
+---
+title: "Bot API"
+description: "Build automated draughts players with the Bot API"
+---
+
+The Bot API allows you to build programs that play draughts on Lidraughts. A bot connects to a game stream, receives events, and sends moves via HTTP.
+
+<Warning>
+All Bot API endpoints require a **bot account**. Upgrade a regular account to a bot account by calling `POST /api/bot/account/upgrade`. This action is irreversible — a bot account cannot be converted back to a regular account.
+</Warning>
+
+All Bot API endpoints require authentication with the `bot:play` scope.
+
+## Upgrade to a bot account
+
+```
+POST /api/bot/account/upgrade
+```
+
+Upgrades the authenticated account to a bot account. Required before using any other Bot API endpoint.
+
+<Warning>
+This is irreversible. Once an account is upgraded to a bot, it cannot play from the website UI and cannot be downgraded.
+</Warning>
+
+### Required scopes
+
+`bot:play`
+
+### Example
+
+```bash
+curl -X POST https://lidraughts.org/api/bot/account/upgrade \
+  -H "Authorization: Bearer your_token"
+```
+
+---
+
+## Stream a bot game
+
+```
+GET /api/bot/game/stream/:id
+```
+
+Opens a persistent NDJSON stream of game events for a bot game. The stream emits a `gameFull` event immediately on connection, followed by `gameState` events on each move, and `chatLine` events when chat messages are received.
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The game ID to stream.
+</ParamField>
+
+### Required scopes
+
+`bot:play`
+
+### Event types
+
+<ResponseField name="type" type="string">
+  Event type. One of `gameFull`, `gameState`, or `chatLine`.
+</ResponseField>
+
+**`gameFull`** — Sent once at the start of the stream. Contains full game metadata.
+
+<ResponseField name="id" type="string">
+  Game ID.
+</ResponseField>
+
+<ResponseField name="variant" type="object">
+  The game variant (key and name).
+</ResponseField>
+
+<ResponseField name="clock" type="object">
+  Clock configuration (initial time and increment).
+</ResponseField>
+
+<ResponseField name="initialFen" type="string">
+  Starting position FEN. `"startpos"` for the standard starting position.
+</ResponseField>
+
+<ResponseField name="white" type="object">
+  White player information (id, name, rating).
+</ResponseField>
+
+<ResponseField name="black" type="object">
+  Black player information (id, name, rating).
+</ResponseField>
+
+<ResponseField name="state" type="object">
+  Embedded `gameState` object with the current position.
+</ResponseField>
+
+**`gameState`** — Sent after each move and at game end.
+
+<ResponseField name="moves" type="string">
+  Space-separated list of all moves played so far in UCI format.
+</ResponseField>
+
+<ResponseField name="wtime" type="integer">
+  White's remaining time in milliseconds.
+</ResponseField>
+
+<ResponseField name="btime" type="integer">
+  Black's remaining time in milliseconds.
+</ResponseField>
+
+<ResponseField name="winc" type="integer">
+  White's clock increment in milliseconds.
+</ResponseField>
+
+<ResponseField name="binc" type="integer">
+  Black's clock increment in milliseconds.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Game status: `started`, `aborted`, `mate`, `resign`, `stalemate`, `timeout`, `draw`, `outoftime`, `cheat`, `noStart`, `unknownFinish`, `variantEnd`.
+</ResponseField>
+
+<ResponseField name="winner" type="string">
+  `white` or `black` if the game is over and has a winner.
+</ResponseField>
+
+**`chatLine`** — Sent when a chat message arrives.
+
+<ResponseField name="username" type="string">
+  Username of the sender.
+</ResponseField>
+
+<ResponseField name="text" type="string">
+  Message text.
+</ResponseField>
+
+<ResponseField name="room" type="string">
+  Chat room: `player` or `spectator`.
+</ResponseField>
+
+### Example
+
+```bash
+curl https://lidraughts.org/api/bot/game/stream/abcd1234 \
+  -H "Authorization: Bearer your_token"
+```
+
+---
+
+## Make a move
+
+```
+POST /api/bot/game/:id/move/:uci
+```
+
+Plays a move in a bot game. The move must be in UCI format.
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The game ID.
+</ParamField>
+
+<ParamField path="uci" type="string" required>
+  The move in UCI format (e.g. `3227` for a move from square 32 to square 27).
+</ParamField>
+
+### Query parameters
+
+<ParamField query="offeringDraw" type="boolean">
+  When `true`, offers a draw alongside the move.
+</ParamField>
+
+### Required scopes
+
+`bot:play`
+
+<Info>
+In draughts UCI notation, moves are represented as the source square followed by the destination square. For example, `3227` moves a piece from square 32 to square 27. Capture moves follow the same numeric format.
+</Info>
+
+### Example
+
+```bash
+curl -X POST "https://lidraughts.org/api/bot/game/abcd1234/move/3227" \
+  -H "Authorization: Bearer your_token"
+```
+
+---
+
+## Bot commands
+
+```
+POST /api/bot/*cmd
+```
+
+General-purpose bot command endpoint. The following commands are supported:
+
+### Upgrade account
+
+`POST /api/bot/account/upgrade`
+
+Upgrades the authenticated account to a bot account (see above).
+
+### Send a chat message
+
+`POST /api/bot/game/:id/chat`
+
+Sends a message to the game chat.
+
+### Request body (form-encoded)
+
+<ParamField body="room" type="string" required>
+  Chat room to post to: `player` or `spectator`.
+</ParamField>
+
+<ParamField body="text" type="string" required>
+  Message text to send.
+</ParamField>
+
+### Example
+
+```bash
+curl -X POST https://lidraughts.org/api/bot/game/abcd1234/chat \
+  -H "Authorization: Bearer your_token" \
+  -d "room=player&text=Good luck!"
+```
+
+### Abort a game
+
+`POST /api/bot/game/:id/abort`
+
+Aborts a game that has not yet started (i.e. no moves have been played).
+
+```bash
+curl -X POST https://lidraughts.org/api/bot/game/abcd1234/abort \
+  -H "Authorization: Bearer your_token"
+```
+
+### Resign a game
+
+`POST /api/bot/game/:id/resign`
+
+Resigns the current game.
+
+```bash
+curl -X POST https://lidraughts.org/api/bot/game/abcd1234/resign \
+  -H "Authorization: Bearer your_token"
+```
+
+---
+
+## List online bots
+
+```
+GET /player/bots
+```
+
+Returns an HTML page listing all currently online bot accounts. This is a browser-facing page rather than a JSON API endpoint.
+
+---
+
+## Typical bot workflow
+
+1. Upgrade your account: `POST /api/bot/account/upgrade`
+2. Listen for incoming challenges and game starts via `GET /api/stream/event` (see [Account](/api/account))
+3. For each incoming game, open a game stream: `GET /api/bot/game/stream/:id`
+4. On each `gameState` event, compute your move and submit it: `POST /api/bot/game/:id/move/:uci`
+5. When the game ends (`status` is not `started`), close the stream
+
+<Tip>
+To accept challenges automatically, listen on the event stream and call `POST /api/challenge/:id/accept` for challenges you want to play.
+</Tip>

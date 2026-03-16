@@ -1,0 +1,215 @@
+---
+title: "Challenges"
+description: "Create and manage game challenges"
+---
+
+Challenges let you invite another user to a game with specific time control, variant, and color settings.
+
+## Create a challenge
+
+```
+POST /api/challenge/:user
+```
+
+Sends a challenge to the specified user. Requires authentication with `challenge:write` or `bot:play` scope.
+
+### Path parameters
+
+<ParamField path="user" type="string" required>
+  The username of the player to challenge.
+</ParamField>
+
+### Required scopes
+
+`challenge:write` or `bot:play`
+
+### Request body (form-encoded)
+
+<ParamField body="rated" type="boolean">
+  Whether the game will be rated. Defaults to `false`.
+</ParamField>
+
+<ParamField body="clock.limit" type="integer">
+  Clock initial time in seconds (e.g. `300` for 5 minutes). Required unless using `days` (correspondence) or leaving unlimited.
+</ParamField>
+
+<ParamField body="clock.increment" type="integer">
+  Clock increment in seconds.
+</ParamField>
+
+<ParamField body="days" type="integer">
+  Days per move for a correspondence challenge (1, 2, 3, 5, 7, 10, or 14).
+</ParamField>
+
+<ParamField body="color" type="string">
+  Color preference: `random` (default), `white`, or `black`.
+</ParamField>
+
+<ParamField body="variant" type="string">
+  Draughts variant key (e.g. `standard`, `frisian`, `antidraughts`, `breakthrough`, `russian`, `brazilian`). Defaults to `standard`.
+</ParamField>
+
+<ParamField body="fen" type="string">
+  Custom starting position in FEN notation. Only valid for `fromPosition` variant.
+</ParamField>
+
+<ParamField body="microMatch" type="boolean">
+  When `true`, creates a two-game micro-match where colors alternate between games.
+</ParamField>
+
+### Response
+
+Returns a challenge object on success.
+
+<ResponseField name="id" type="string">
+  The challenge ID (8 characters).
+</ResponseField>
+
+<ResponseField name="url" type="string">
+  URL to view the challenge.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Current status of the challenge.
+</ResponseField>
+
+<ResponseField name="challenger" type="object">
+  The user who sent the challenge.
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">User ID.</ResponseField>
+    <ResponseField name="name" type="string">Display name.</ResponseField>
+    <ResponseField name="rating" type="integer">Current rating.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="destUser" type="object">
+  The user who received the challenge.
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">User ID.</ResponseField>
+    <ResponseField name="name" type="string">Display name.</ResponseField>
+    <ResponseField name="rating" type="integer">Current rating.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="variant" type="object">
+  The game variant.
+  <Expandable title="properties">
+    <ResponseField name="key" type="string">Variant key.</ResponseField>
+    <ResponseField name="name" type="string">Variant display name.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="timeControl" type="object">
+  Time control settings.
+  <Expandable title="properties">
+    <ResponseField name="type" type="string">`clock`, `correspondence`, or `unlimited`.</ResponseField>
+    <ResponseField name="limit" type="integer">Clock initial time in seconds (for `clock` type).</ResponseField>
+    <ResponseField name="increment" type="integer">Clock increment in seconds (for `clock` type).</ResponseField>
+    <ResponseField name="daysPerTurn" type="integer">Days per move (for `correspondence` type).</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="color" type="string">
+  Assigned color: `white`, `black`, or `random`.
+</ResponseField>
+
+### Example
+
+```bash
+curl -X POST https://lidraughts.org/api/challenge/playerone \
+  -H "Authorization: Bearer your_token" \
+  -d "rated=true&clock.limit=300&clock.increment=3&color=random"
+```
+
+---
+
+## Accept a challenge
+
+```
+POST /api/challenge/:id/accept
+```
+
+Accepts an incoming challenge. Requires `challenge:write` or `bot:play` scope.
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The 8-character challenge ID.
+</ParamField>
+
+### Required scopes
+
+`challenge:write` or `bot:play`
+
+### Example
+
+```bash
+curl -X POST https://lidraughts.org/api/challenge/abcd1234/accept \
+  -H "Authorization: Bearer your_token"
+```
+
+---
+
+## Decline a challenge
+
+```
+POST /api/challenge/:id/decline
+```
+
+Declines an incoming challenge. Requires `challenge:write` or `bot:play` scope.
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The 8-character challenge ID.
+</ParamField>
+
+### Required scopes
+
+`challenge:write` or `bot:play`
+
+### Example
+
+```bash
+curl -X POST https://lidraughts.org/api/challenge/abcd1234/decline \
+  -H "Authorization: Bearer your_token"
+```
+
+---
+
+## Create an external challenge
+
+```
+POST /api/challenge/external/:user
+```
+
+Creates a challenge between two specified users without requiring the challenger to be authenticated. This is useful for server-side integrations (e.g. tournament platforms) that set up games on behalf of players.
+
+<Note>
+No authentication from the challenger is required. The challenger and opponent must both be valid, active Lidraughts users. The challenger and opponent cannot be the same account.
+</Note>
+
+### Path parameters
+
+<ParamField path="user" type="string" required>
+  The username of the challenger (the user who is initiating the game).
+</ParamField>
+
+### Request body (form-encoded)
+
+Accepts the same parameters as `POST /api/challenge/:user`, plus:
+
+<ParamField body="opponent" type="string" required>
+  The username of the opponent.
+</ParamField>
+
+<ParamField body="startsAt" type="integer">
+  Optional scheduled start time as a Unix timestamp (milliseconds).
+</ParamField>
+
+### Example
+
+```bash
+curl -X POST https://lidraughts.org/api/challenge/external/playerone \
+  -d "opponent=playertwo&clock.limit=600&clock.increment=5&rated=true"
+```

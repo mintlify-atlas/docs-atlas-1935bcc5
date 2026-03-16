@@ -1,0 +1,162 @@
+---
+title: "Self-hosting overview"
+description: "Run your own Lidraughts server"
+---
+
+Lidraughts is fully open source under the [AGPL-3.0 license](https://github.com/roepstoep/lidraughts/blob/master/LICENSE). You can run a private or public instance for your club, organization, or development purposes.
+
+## Why Self-host?
+
+- **Full control** — configure rating systems, variants, time controls, and access rules to your needs.
+- **Private play** — keep games and user data within your own infrastructure.
+- **Development** — run a local instance to contribute to or extend Lidraughts.
+- **Offline use** — operate independently of lidraughts.org.
+
+## Technology Stack
+
+Lidraughts is built from several components. You will need to install and configure each one.
+
+| Component | Technology | Purpose |
+|---|---|---|
+| Application server | Scala / Play 2.x | Core game logic, HTTP API, WebSockets |
+| Actor system | Akka | Concurrent game and event handling |
+| Database | MongoDB | Persistent storage for games, users, and settings |
+| Frontend | TypeScript / SCSS | UI compiled with Webpack |
+| Board UI | draughtsground | Fork of chessground adapted for draughts |
+| Engine | Scan 3.1 | Computer opposition and position analysis |
+| Reverse proxy | Nginx | TLS termination, WebSocket proxying, static assets |
+
+<Note>
+  The main application is a [Play 2.x](https://www.playframework.com/) project written in Scala. It is built with [sbt](https://www.scala-sbt.org/). The frontend assets are compiled separately.
+</Note>
+
+## What You Will Need
+
+<Steps>
+  <Step title="Install runtime dependencies">
+    Ensure the following are available on your server:
+
+    - **Java 8+** (required by the Play/Scala runtime)
+    - **sbt** (Scala build tool)
+    - **MongoDB** (version 4.0 or later recommended)
+    - **Node.js** (for compiling TypeScript and SCSS frontend assets)
+    - **Nginx** (or another reverse proxy for WebSocket support)
+    - **Scan 3.1** engine binary (for computer play and analysis)
+  </Step>
+
+  <Step title="Configure the application">
+    Lidraughts uses [Typesafe Config](https://github.com/lightbend/config). The base configuration lives in `conf/base.conf`. Override settings in your own `application.conf`:
+
+    ```hocon
+    include "base"
+
+    http {
+      port = 9663
+    }
+    net {
+      domain = "yourdomain.org"
+    }
+    ```
+
+    Key settings to review in `conf/base.conf`:
+
+    - `mongodb.uri` — defaults to `mongodb://127.0.0.1:27017/lidraughts`
+    - `net.domain` — set to your public domain
+    - `net.protocol` — set to `https://` when running with TLS
+    - `draughtsnet` — path and configuration for the Scan engine
+  </Step>
+
+  <Step title="Configure Nginx">
+    Lidraughts requires a reverse proxy that supports WebSocket upgrades. A minimal Nginx configuration:
+
+    ```nginx
+    # Websocket subdomain
+    server {
+      listen 80;
+      server_name socket.yourdomain.org;
+
+      location / {
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_pass http://127.0.0.1:9663;
+      }
+    }
+
+    # Main site
+    server {
+      listen 80;
+      server_name yourdomain.org;
+
+      location /assets {
+        add_header "Access-Control-Allow-Origin" "*";
+        alias /path/to/lidraughts/public;
+      }
+
+      location / {
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 90s;
+        proxy_http_version 1.1;
+        proxy_pass http://127.0.0.1:9663;
+      }
+    }
+    ```
+
+    A full example is available at `doc/example_nginx.conf` in the source repository.
+  </Step>
+
+  <Step title="Build and run">
+    Compile and start the application with sbt:
+
+    ```bash
+    sbt run
+    ```
+
+    For production, build a deployable package:
+
+    ```bash
+    sbt stage
+    ./target/universal/stage/bin/lidraughts -Dconfig.file=/path/to/application.conf
+    ```
+  </Step>
+</Steps>
+
+## Modules
+
+The application is organized into independent modules compiled together by sbt. Key modules include:
+
+| Module | Description |
+|---|---|
+| `draughts` | Core draughts rules and move generation |
+| `game` | Game storage and lifecycle |
+| `round` | Real-time game play over WebSocket |
+| `tournament` | Arena and Swiss tournament logic |
+| `lobby` | Matchmaking and seek system |
+| `setup` | Game creation and configuration |
+| `analyse` | Engine analysis integration |
+| `draughtsnet` | Distributed analysis worker protocol |
+| `puzzle` | Tactics puzzle system |
+| `study` | Shared analysis and annotation |
+
+## License
+
+Lidraughts is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**. Any modifications you deploy over a network must be made available as open source under the same license.
+
+<Warning>
+  The AGPL-3.0 has network use provisions. If you run a modified version of Lidraughts and allow others to use it over a network, you must provide access to the modified source code.
+</Warning>
+
+## Further Reading
+
+<CardGroup cols={2}>
+  <Card title="Draughtsnet setup" icon="cpu" href="/self-hosting/draughtsnet">
+    Set up an engine worker for computer analysis.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/overview">
+    REST and streaming API documentation.
+  </Card>
+</CardGroup>

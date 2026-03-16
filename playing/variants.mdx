@@ -1,0 +1,212 @@
+---
+title: "Variants"
+description: "All draughts variants supported on Lidraughts"
+---
+
+Lidraughts supports **seven draughts variants** across two board sizes. Five variants are played on the 10×10 international board; two are played on the 8×8 board.
+
+## Variant overview
+
+| Variant | Board | Starting pieces | Win condition | Key rule difference |
+|---|---|---|---|---|
+| Standard | 10×10 | 20 vs 20 | Capture or block all opponent pieces | International FMJD rules |
+| Frisian | 10×10 | 20 vs 20 | Capture or block all opponent pieces | Pieces capture horizontally & vertically too |
+| Frysk! | 10×10 | 5 vs 5 | Capture or block all opponent pieces | Frisian rules, starts with 5 pieces on the back rank |
+| Antidraughts | 10×10 | 20 vs 20 | Lose all your pieces (or be blocked) | Goal is reversed |
+| Breakthrough | 10×10 | 20 vs 20 | First to promote a piece to king | No capture objective |
+| Russian | 8×8 | 12 vs 12 | Capture or block all opponent pieces | Free capture choice; promotion mid-capture |
+| Brazilian | 8×8 | 12 vs 12 | Capture or block all opponent pieces | International rules on an 8×8 board |
+
+---
+
+## Standard
+
+**International draughts** (FMJD rules) on the classic 10×10 board. This is the most widely played form of draughts in the world and the default variant on Lidraughts.
+
+> *"Standard rules of international draughts (FMJD)."*
+
+### Rules summary
+
+- Pieces move **diagonally forward** one square.
+- Captures are **mandatory** and must take the maximum number of pieces.
+- A piece reaching the back rank becomes a **king**, which can move and capture any distance along diagonals.
+- The game is drawn after 25 consecutive king moves without capture, or by threefold repetition, or under specific endgame material rules (e.g. 5-move rule, 16-move rule).
+
+<Note>
+  Standard is governed by the official **FMJD (Fédération Mondiale du Jeu de Dames)** rules. See the official rules in `/doc/variant/standard/`.
+</Note>
+
+### Draw rules (key material endings)
+
+| Situation | Moves to draw |
+|---|---|
+| Single king vs. king + ≤2 pieces | 5 moves each |
+| Single king vs. king + 3 pieces | 16 moves each |
+| 25 consecutive king moves | Automatic draw |
+| Threefold repetition | Automatic draw |
+
+---
+
+## Frisian
+
+Frisian draughts plays exactly like Standard but adds **horizontal and vertical captures** for both pieces and kings.
+
+> *"Pieces can also capture horizontally and vertically."*
+
+### Key differences from Standard
+
+- Capture directions: diagonals **plus** up, down, left, right — eight total directions.
+- Capture selection uses **value priority**: a king capture (value 199) must be preferred over a man capture (value 100) when both are possible with equal count.
+- **Draw rules**: when only kings remain, the game draws after 7 moves each if one side has two kings vs one, or after 2 moves each when both sides have a single king.
+
+<Info>
+  Frisian draughts originates from the province of Friesland in the Netherlands. The official rules are provided as a PDF in the repository at `doc/variant/frisian/OfficialRulesFrisianDraughts.pdf`.
+</Info>
+
+<CardGroup cols={2}>
+  <Card title="Frisian tournaments" icon="trophy" href="https://lidraughts.org/tournament">
+    Dedicated Frisian Arena and Swiss tournaments run regularly on Lidraughts.
+  </Card>
+  <Card title="Frisian Shield" icon="shield" href="https://lidraughts.org/tournament/shields">
+    The Frisian Shield is a monthly prestige tournament — defend the title you won!
+  </Card>
+</CardGroup>
+
+---
+
+## Frysk!
+
+Frysk! is **Frisian draughts starting with 5 pieces each**, placed on the back rank.
+
+> *"Frisian draughts starting with 5 pieces each."*
+
+### Starting position
+
+- **White**: squares 46–50 (back rank)
+- **Black**: squares 1–5 (back rank)
+- FEN: `W:W46,47,48,49,50:B1,2,3,4,5:H0:F1`
+
+All Frisian capture and movement rules apply unchanged. With only 5 pieces on each side, the opening phase is extremely tactical and games are typically short and sharp.
+
+<Tip>
+  Because all pieces start as men on the promotion rank, the very first move of the game can produce a king if captures are forced.
+</Tip>
+
+---
+
+## Antidraughts
+
+The goal in Antidraughts is the **opposite** of Standard draughts: you must lose all your pieces, or be left with no legal moves.
+
+> *"Lose all your pieces (or run out of moves) to win the game."*
+
+### Rules summary
+
+- All Standard movement and capture rules apply (captures are still mandatory).
+- The player who **runs out of moves** (all pieces captured or all pieces blocked) **wins**.
+- Threefold repetition still applies.
+- There are **no draw rules** based on material or king moves.
+
+<Warning>
+  Mandatory captures still apply in Antidraughts. You cannot voluntarily skip a capture — even if it means your piece will be taken next move.
+</Warning>
+
+---
+
+## Breakthrough
+
+In Breakthrough, the first player to **promote a piece to king wins** immediately.
+
+> *"The first player who makes a king wins."*
+
+### Rules summary
+
+- All Standard movement rules apply (pieces move diagonally forward).
+- Captures are mandatory but do **not** win the game on their own.
+- The game ends **immediately** when either player promotes a piece to king.
+- If a player is stalemated (no moves), the **opponent wins**.
+- There are **no draw rules** — the game always ends with a winner.
+
+<Note>
+  Breakthrough is the most forward-oriented variant on Lidraughts. Deep calculation of breakthrough paths is the key skill.
+</Note>
+
+---
+
+## Russian
+
+Russian draughts on an **8×8 board** with several rule differences from Standard.
+
+> *"Choice of capture, promotion during a multi-capture."*
+
+### Key rules
+
+- Board: **8×8**, with 12 pieces per side in three ranks.
+- Pieces move forward diagonally; kings move **any distance** along a diagonal (long-range kings, same as Standard).
+- **Free capture choice**: you are not required to take the maximum number of pieces — any legal capture sequence is valid.
+- **Promotion mid-capture**: a man that reaches the promotion rank during a multi-capture sequence promotes to king and can immediately continue capturing as a king.
+- Governed by **FMJD64 (Russian Federation) rules**.
+
+### Draw rules (Russian-specific)
+
+| Rule | Condition |
+|---|---|
+| 7.2.3 | Threefold repetition |
+| 7.2.4 | 3+ kings vs 1 king — draw if not captured within 15 moves |
+| 7.2.5 | Only king moves (no captures, no man moves) for 15 moves |
+| 7.2.6 | 4–5 piece endings: draw in 30 moves; 6–7 piece endings: draw in 60 moves |
+| 7.2.7 | 3-piece strong side vs lone king on long diagonal: draw in 5 moves |
+| 7.2.8 | 2-piece strong side vs lone king: draw in 5 moves |
+
+<Info>
+  Russian draughts supports **opening tables** from both the FMJD and IDF (International Draughts Federation) databases, enabling thematic tournament positions.
+</Info>
+
+---
+
+## Brazilian
+
+Brazilian draughts uses the **same rules as international (Standard) draughts** but is played on an **8×8 board** with 12 pieces per side.
+
+> *"Same rules as international draughts, played on an 8x8 board."*
+
+### Key rules
+
+- Board: **8×8**, with 12 pieces per side (same starting position as Russian).
+- **Maximum capture rule**: you must always take the maximum possible number of pieces (unlike Russian).
+- Kings are long-range (move any distance diagonally).
+- Draw rules follow the same Russian draw rules (7.2.x series).
+- **No promotion mid-capture**: a man that reaches the promotion rank ends its capture sequence (unlike Russian).
+
+<Note>
+  The key distinction between Russian and Brazilian is the capture rule: Brazilian requires **maximum captures** (like Standard/International), while Russian allows free choice.
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="Russian tournaments" icon="trophy" href="https://lidraughts.org/tournament">
+    Regular Russian Shield and Arena tournaments on Lidraughts.
+  </Card>
+  <Card title="Brazilian tournaments" icon="trophy" href="https://lidraughts.org/tournament">
+    Regular Brazilian Shield and Arena tournaments on Lidraughts.
+  </Card>
+</CardGroup>
+
+---
+
+## Choosing a variant
+
+<Accordion title="Which variant should I start with?">
+  **Standard** is the best entry point. It is the most documented, has the largest player pool, and all other 10×10 variants are extensions of its rules. The FMJD rules for Standard are internationally recognised and well-documented.
+</Accordion>
+
+<Accordion title="What is the difference between Russian and Brazilian?">
+  Both are played on an 8×8 board with 12 pieces per side. The key difference is the capture rule: **Russian** lets you choose any legal capture sequence (free choice), while **Brazilian** requires you to capture the maximum number of pieces (like international Standard rules).
+</Accordion>
+
+<Accordion title="Are there puzzles for every variant?">
+  Yes — Lidraughts has a dedicated puzzle set for Standard, Frisian, and Russian. See the [Tactics puzzles](/playing/puzzles) page for details.
+</Accordion>
+
+<Accordion title="Can I play all variants against the computer?">
+  The Scan 3.1 engine supports all five 10×10 variants (Standard, Frisian, Frysk!, Antidraughts, Breakthrough). The 8×8 variants (Russian, Brazilian) are currently human-vs-human only in AI games.
+</Accordion>

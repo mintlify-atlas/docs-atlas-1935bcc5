@@ -1,0 +1,107 @@
+---
+title: "Board editor"
+description: "Set up custom draughts positions with the board editor"
+---
+
+The Lidraughts board editor lets you place pieces freely on the board to create any custom position, then use that position as the starting point for a game, analysis, or study chapter.
+
+Open the editor at [lidraughts.org/editor](https://lidraughts.org/editor).
+
+## Opening the editor
+
+There are several ways to reach the board editor:
+
+<CardGroup cols={2}>
+  <Card title="Empty board" icon="chess-board" href="https://lidraughts.org/editor">
+    Open the editor with a blank Standard board
+  </Card>
+  <Card title="With a position" icon="pen">
+    Open the editor pre-loaded with a FEN position for a specific variant: `/editor/{variant}/{fen}`
+  </Card>
+  <Card title="From a game" icon="arrow-right">
+    Open the final position of a completed game in the editor: `/{gameId}/edit`
+  </Card>
+  <Card title="With a FEN parameter" icon="code" href="https://lidraughts.org/editor">
+    Load any position via the `fen` query parameter
+  </Card>
+</CardGroup>
+
+<Note>
+  If you open the editor from a game that is still in progress (`game.playable`), you are redirected to the live game watcher instead.
+</Note>
+
+## URL structure
+
+The editor URL encodes the variant and position:
+
+```
+/editor                        # Standard, initial position
+/editor/{variant}              # Named variant, initial position
+/editor/{variant}/{fen}        # Named variant with a specific FEN
+/editor?fen={fen}              # Standard with FEN from query parameter
+```
+
+Underscores in the URL-encoded FEN are automatically converted to spaces. The editor uses `Forsyth.<<<@` to parse the FEN against the selected variant, falling back to the variant's initial `Situation` if the FEN is invalid.
+
+## Supported variants
+
+The board editor supports all variants available on Lidraughts. The variant is selected by its key (e.g. `standard`, `russian`, `frisian`). Standard opening table positions are available as presets, and Russian draughts has its own named opening table groupings.
+
+<Tabs>
+  <Tab title="Standard">
+    The default 10×10 Standard draughts board. Opening table presets are available from the sidebar.
+  </Tab>
+  <Tab title="Russian (draughts64)">
+    Russian draughts uses an 8×8 board. Presets are organized by named opening table groups.
+  </Tab>
+  <Tab title="Other variants">
+    Any other supported variant can be selected. The board resizes and piece movement rules update accordingly.
+  </Tab>
+</Tabs>
+
+## Setting up a position
+
+<Steps>
+  <Step title="Select a variant">
+    Choose the draughts variant from the variant selector. The board and piece rules update immediately.
+  </Step>
+  <Step title="Place pieces">
+    Drag pieces from the piece palette onto the board squares. Remove pieces by dragging them off the board.
+  </Step>
+  <Step title="Set the side to move">
+    Toggle which color moves next.
+  </Step>
+  <Step title="Use a preset (optional)">
+    Select a named opening position from the preset list to load it instantly.
+  </Step>
+</Steps>
+
+## FEN support
+
+The editor reads and writes positions in **FEN** (Forsyth-Edwards Notation) adapted for draughts:
+
+- The current FEN is shown at all times and updates as you edit the board
+- You can paste a FEN directly into the FEN field to load a position
+- The `Forsyth >>` operator exports the current `Situation` to a FEN string
+- FEN can also be passed via the `fen` query parameter or as a URL path segment
+
+<Info>
+  The editor JSON data endpoint at `/editor.json` returns the board data as JSON, useful for programmatic access.
+</Info>
+
+## Starting a game from a position
+
+Once you have set up a position, you can:
+
+- **Analyze** — click **Analysis board** to open the position in the analysis board at `/analysis/{variant}/{fen}`
+- **Play vs AI** — start a game against Scan from this position
+- **Play vs a friend** — create a challenge starting from this FEN
+- **Continue in a Study** — add the position as a chapter in a new or existing study
+
+<Tip>
+  The position must be legal for the selected variant before you can start a game. The editor validates the FEN before redirecting.
+</Tip>
+
+## Animation
+
+The board editor uses the same animation duration as the rest of Lidraughts, configured via `Env.api.EditorAnimationDuration`. Piece placement and removal are animated for visual clarity.

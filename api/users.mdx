@@ -1,0 +1,250 @@
+---
+title: "Users"
+description: "Access user profile and activity data"
+---
+
+## Get a user profile
+
+```
+GET /api/user/:name
+```
+
+Returns public information about a user.
+
+### Path parameters
+
+<ParamField path="name" type="string" required>
+  The username of the user.
+</ParamField>
+
+### Example
+
+```bash
+curl https://lidraughts.org/api/user/playerone
+```
+
+---
+
+## Get user activity
+
+```
+GET /api/user/:name/activity
+```
+
+Returns a list of recent activity entries for the user (games played, puzzles solved, tournaments entered, etc.).
+
+### Path parameters
+
+<ParamField path="name" type="string" required>
+  The username of the user.
+</ParamField>
+
+### Example
+
+```bash
+curl https://lidraughts.org/api/user/playerone/activity
+```
+
+---
+
+## Get users followed by a user
+
+```
+GET /api/user/:name/following
+```
+
+Returns users that the given user is following. Results are streamed as NDJSON.
+
+### Path parameters
+
+<ParamField path="name" type="string" required>
+  The username of the user.
+</ParamField>
+
+---
+
+## Get followers of a user
+
+```
+GET /api/user/:name/followers
+```
+
+Returns users who follow the given user. Results are streamed as NDJSON.
+
+### Path parameters
+
+<ParamField path="name" type="string" required>
+  The username of the user.
+</ParamField>
+
+---
+
+## Get rating history
+
+```
+GET /api/user/:name/rating-history
+```
+
+Returns the rating history of a user across all performance types.
+
+### Path parameters
+
+<ParamField path="name" type="string" required>
+  The username of the user.
+</ParamField>
+
+### Example
+
+```bash
+curl https://lidraughts.org/api/user/playerone/rating-history
+```
+
+---
+
+## Get tournaments created by a user
+
+```
+GET /api/user/:name/tournament/created
+```
+
+Returns tournaments created by the specified user. Results are streamed as NDJSON.
+
+### Path parameters
+
+<ParamField path="name" type="string" required>
+  The username of the user.
+</ParamField>
+
+### Query parameters
+
+<ParamField query="nb" type="integer">
+  Maximum number of tournaments to return. Defaults to all.
+</ParamField>
+
+---
+
+## Get multiple users by IDs
+
+```
+POST /api/users
+```
+
+Returns an array of users for a comma-separated list of usernames sent in the request body. Up to 300 usernames per request.
+
+### Request body
+
+Send a plain text body with comma-separated usernames:
+
+```
+player1,player2,player3
+```
+
+### Example
+
+```bash
+curl -X POST https://lidraughts.org/api/users \
+  -H "Content-Type: text/plain" \
+  --data "player1,player2,player3"
+```
+
+---
+
+## Get online status of users
+
+```
+GET /api/users/status
+```
+
+Returns online, playing, and streaming status for up to 50 users.
+
+### Query parameters
+
+<ParamField query="ids" type="string" required>
+  Comma-separated list of user IDs (up to 50).
+</ParamField>
+
+### Response fields
+
+<ResponseField name="id" type="string">
+  The user's ID.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The user's display name.
+</ResponseField>
+
+<ResponseField name="online" type="boolean">
+  Whether the user is currently online.
+</ResponseField>
+
+<ResponseField name="playing" type="boolean">
+  Whether the user is currently playing a game.
+</ResponseField>
+
+<ResponseField name="streaming" type="boolean">
+  Whether the user is currently streaming.
+</ResponseField>
+
+### Example
+
+```bash
+curl "https://lidraughts.org/api/users/status?ids=player1,player2"
+```
+
+---
+
+## Get titled players
+
+```
+GET /api/users/titled
+```
+
+Streams users who hold a draughts title. Results are streamed as NDJSON.
+
+### Query parameters
+
+<ParamField query="titles" type="string">
+  Comma-separated list of titles to filter by (e.g. `GMD,IMD`). Up to 20 titles.
+</ParamField>
+
+<ParamField query="online" type="boolean">
+  When `true`, only return users who are currently online.
+</ParamField>
+
+### Example
+
+```bash
+curl "https://lidraughts.org/api/users/titled?titles=GMD&online=true"
+```
+
+---
+
+## Get crosstable between two users
+
+```
+GET /api/crosstable/:u1/:u2
+```
+
+Returns the head-to-head score between two users, and optionally the current ongoing match score.
+
+### Path parameters
+
+<ParamField path="u1" type="string" required>
+  Username of the first user.
+</ParamField>
+
+<ParamField path="u2" type="string" required>
+  Username of the second user.
+</ParamField>
+
+### Query parameters
+
+<ParamField query="matchup" type="boolean">
+  When `true`, also include the current ongoing matchup score between the two players.
+</ParamField>
+
+### Example
+
+```bash
+curl "https://lidraughts.org/api/crosstable/player1/player2?matchup=true"
+```

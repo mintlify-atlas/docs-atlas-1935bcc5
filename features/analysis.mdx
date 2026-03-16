@@ -1,0 +1,111 @@
+---
+title: "Game analysis"
+description: "Analyze your draughts games with the Scan 3.1 engine"
+---
+
+Lidraughts provides a full in-browser analysis board powered by the **Scan 3.1** engine, which supports all 10×10 draughts variants. You can analyze any completed game, import PDN, or set up a position from scratch.
+
+## Opening the analysis board
+
+Navigate to [lidraughts.org/analysis](https://lidraughts.org/analysis) to open a blank analysis board. You can also reach the analysis board from:
+
+- Any completed game page — click **Analysis board** below the board
+- A game URL directly: `/{gameId}/{color}/analysis`
+- The PDN import form at `/analysis` (POST to `/analysis/pdn`)
+
+<CardGroup cols={2}>
+  <Card title="Analysis board" icon="magnifying-glass" href="https://lidraughts.org/analysis">
+    Open an empty interactive analysis board
+  </Card>
+  <Card title="PDN import" icon="file-import" href="https://lidraughts.org/paste">
+    Import a game or position via PDN notation
+  </Card>
+</CardGroup>
+
+## Requesting computer analysis
+
+For any completed game, you can request a full engine evaluation of every move.
+
+<Steps>
+  <Step title="Open the game">
+    Go to the game page (e.g. `/{gameId}/white`).
+  </Step>
+  <Step title="Request analysis">
+    Click **Request computer analysis**. This sends a POST request to `/{gameId}/request-analysis`. You must be logged in.
+  </Step>
+  <Step title="Wait for results">
+    Analysis is queued and processed by a Draughtsnet worker running Scan 3.1. Once complete, per-move evaluations and the best continuation appear on the board.
+  </Step>
+</Steps>
+
+<Note>
+  Analysis requests are rate-limited. If the game has already been analysed, requesting again has no effect.
+</Note>
+
+## The Scan 3.1 engine
+
+Lidraughts uses **Scan 3.1** for all computer analysis and AI play. It is the engine component of the Draughtsnet distributed analysis system.
+
+- Supports 10×10 Standard draughts and all supported variants
+- Each analysis worker reports its engine name and version when registering with the server
+- Evaluations include centipawn scores, win-in-N indicators, principal variation (PV), depth, nodes, and NPS
+- The server caps NPS at 10,000,000 to normalize across hardware
+
+## Interactive analysis board
+
+The analysis board lets you navigate and annotate any position interactively.
+
+<Tabs>
+  <Tab title="Navigation">
+    - Use the arrow keys or on-screen buttons to step through moves
+    - Click any move in the move list to jump directly to that position
+    - Use the `?fen=` query parameter to start the board at a specific FEN position
+  </Tab>
+  <Tab title="Annotations">
+    - Add comments to any move or position
+    - Draw arrows and circles on the board to highlight squares
+    - Add glyphs (!, ?, !!, ??, !?, ?!) to annotate move quality
+  </Tab>
+  <Tab title="Variations">
+    - Play alternative moves to create branches in the move tree
+    - The engine evaluates each position as you explore
+    - Branches can be collapsed or deleted
+  </Tab>
+</Tabs>
+
+## Eval cache
+
+Lidraughts maintains a server-side **eval cache** of pre-computed positions. When a game is analysed:
+
+1. Positions with cached evaluations are identified before queuing analysis work
+2. Those positions are skipped by the Draughtsnet worker (sent as `skipPositions`)
+3. Cached evals are served directly, reducing redundant computation
+
+The eval cache is populated by commentary analysis workers and used to speed up subsequent requests for the same positions.
+
+<Info>
+  The eval cache is most effective for common opening positions that appear across many games.
+</Info>
+
+## PDN import and export
+
+<Tabs>
+  <Tab title="Import">
+    POST a PDN string to `/analysis/pdn` to open it in the analysis board. The board parses moves, tags, and any existing annotations from the PDN.
+  </Tab>
+  <Tab title="Export">
+    From any game page, use the **Download PDN** button to export the game with optional clock times and annotations. The export respects your preference for algebraic or numeric notation.
+  </Tab>
+</Tabs>
+
+## Sharing analysis
+
+To share your analysis with others:
+
+- Copy the browser URL — it reflects the current position and variation path
+- Use the **Embed** feature to embed a read-only board in another page: `/embed/{gameId}` or `/embed/{gameId}/{color}`
+- Save your work as a **Study** for persistent collaborative annotation (see [Studies](/features/studies))
+
+<Tip>
+  Embedding a game uses the same analysis data but strips member information and chat for privacy.
+</Tip>

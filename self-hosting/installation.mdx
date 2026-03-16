@@ -1,0 +1,226 @@
+---
+title: "Installation"
+description: "Install and run Lidraughts on your own server"
+---
+
+Lidraughts is a Play/Scala web application. This guide walks you through cloning the repository, installing dependencies, and running your own instance.
+
+## Prerequisites
+
+Before you begin, ensure the following are installed on your system:
+
+| Dependency | Version | Notes |
+|---|---|---|
+| JDK | 8+ | Required for Scala/Play |
+| Scala | 2.11.12 | Managed by sbt |
+| sbt | Latest | Scala build tool |
+| MongoDB | 3.x+ | Default URI: `mongodb://127.0.0.1:27017/lidraughts` |
+| Node.js | ≥ 10 | For frontend asset builds |
+| Yarn | Latest | Workspace-based monorepo |
+
+<Note>
+  Scala 2.11.12 is set via `globalScalaVersion` in `project/BuildSettings.scala`. sbt will download and manage it automatically; you do not need to install Scala separately.
+</Note>
+
+## Installation
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/roepstoep/lidraughts.git
+    cd lidraughts
+    ```
+  </Step>
+
+  <Step title="Install frontend dependencies">
+    Lidraughts uses a Yarn workspace monorepo for all UI packages under the `ui/` directory.
+
+    ```bash
+    yarn install
+    ```
+
+    <Note>
+      Yarn is required (not npm). The project uses Yarn workspaces, which are defined in `package.json`.
+    </Note>
+  </Step>
+
+  <Step title="Build frontend assets">
+    Compile all UI modules:
+
+    ```bash
+    yarn build
+    ```
+
+    Built assets are written to the `public/` directory, which is served as `app.web_path` in the configuration.
+  </Step>
+
+  <Step title="Start MongoDB">
+    Lidraughts requires a running MongoDB instance. The default connection URI is:
+
+    ```
+    mongodb://127.0.0.1:27017/lidraughts
+    ```
+
+    Start MongoDB with your system's service manager or run it directly:
+
+    <Tabs>
+      <Tab title="systemd (Linux)">
+        ```bash
+        sudo systemctl start mongod
+        sudo systemctl enable mongod
+        ```
+      </Tab>
+      <Tab title="macOS (Homebrew)">
+        ```bash
+        brew services start mongodb-community
+        ```
+      </Tab>
+      <Tab title="Direct">
+        ```bash
+        mongod --dbpath /var/lib/mongodb
+        ```
+      </Tab>
+    </Tabs>
+
+    The puzzle and insight modules use separate databases by default:
+    - `lidraughts` — main database
+    - `lidraughts-insight` — insight data (`mongodb://127.0.0.1:27017/lidraughts-insight`)
+  </Step>
+
+  <Step title="Create your application.conf">
+    Create a file at `conf/application.conf` that includes the base configuration and overrides your domain:
+
+    ```hocon
+    include "base"
+
+    # Override base.conf settings
+
+    http {
+      port = 9663
+    }
+    net {
+      domain = "yourdomain.org"
+    }
+    ```
+
+    At minimum, set `net.domain` to the domain name where you are hosting Lidraughts. See the [Configuration reference](/self-hosting/configuration) for all available options.
+
+    <Warning>
+      You must replace the default `play.crypto.secret` value before deploying to production. Generate a secure random string and set it in your `application.conf`:
+
+      ```hocon
+      play.crypto.secret = "your-long-random-secret-here"
+      ```
+    </Warning>
+  </Step>
+
+  <Step title="Start the application">
+    Run the Play application with sbt:
+
+    ```bash
+    sbt run
+    ```
+
+    For production, use:
+
+    ```bash
+    sbt stage
+    ./target/universal/stage/bin/lidraughts -Dconfig.file=conf/application.conf
+    ```
+
+    The application listens on port `9663` by default (as set in the example `application.conf`).
+  </Step>
+</Steps>
+
+## Nginx Configuration
+
+For production deployments, place Nginx in front of the Play application. The example configuration below handles:
+- WWW redirect to the bare domain
+- WebSocket proxying on `socket.yourdomain.org`
+- Static asset serving directly from the `public/` directory
+- Reverse proxy for all other requests
+
+```nginx
+#user  nobody;
+worker_processes  1;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+    keepalive_timeout  65;
+
+    # Forward www.
+    server {
+      listen 80;
+      server_name www.yourdomain.org;
+      return 301 $scheme://yourdomain.org$request_uri;
+    }
+
+    # Websocket
+    server {
+      listen 80;
+      server_name socket.yourdomain.org;
+
+      charset utf-8;
+
+      location / {
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_pass http://127.0.0.1:9663;
+      }
+    }
+
+    # Main
+    server {
+      listen 80;
+      server_name yourdomain.org;
+
+      charset utf-8;
+
+      location /assets {
+        add_header "Access-Control-Allow-Origin" "*";
+        alias path_to_lidraughts_root/public;
+      }
+
+      location / {
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 90s;
+        proxy_http_version 1.1;
+        proxy_pass http://127.0.0.1:9663;
+      }
+
+      error_page 500 501 502 503 /oops/servererror.html;
+      error_page 504 /oops/timeout.html;
+      error_page 429 /oops/toomanyrequests.html;
+      location /oops/ {
+        root path_to_lidraughts_root/public;
+      }
+    }
+}
+```
+
+<Tip>
+  Replace `path_to_lidraughts_root` with the absolute path to your cloned Lidraughts directory, and replace `yourdomain.org` with your actual domain in both the Nginx config and your `application.conf`.
+</Tip>
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="sliders" href="/self-hosting/configuration">
+    Detailed reference for all configuration options in `base.conf`
+  </Card>
+  <Card title="Draughtsnet" icon="cpu" href="/self-hosting/draughtsnet">
+    Set up a distributed engine worker for computer analysis and move evaluation
+  </Card>
+</CardGroup>

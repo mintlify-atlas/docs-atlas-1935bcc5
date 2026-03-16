@@ -1,0 +1,442 @@
+---
+title: "Configuration"
+description: "Configure your Lidraughts instance"
+---
+
+Lidraughts uses [Typesafe Config (HOCON)](https://github.com/lightbend/config) for configuration. The base defaults are defined in `conf/base.conf`. You override them in your own `conf/application.conf`, which must start with `include "base"`.
+
+## Minimal Example
+
+```hocon
+include "base"
+
+# Override base.conf members
+
+http {
+  port = 9663
+}
+net {
+  domain = "yourdomain.org"
+}
+```
+
+<Note>
+  You only need to specify values you want to change. Every key not present in your `application.conf` falls back to the value in `base.conf`.
+</Note>
+
+---
+
+## `net` — Network & Domain
+
+Controls the public-facing identity of your Lidraughts instance.
+
+```hocon
+net {
+  domain        = "lidraughts.org"      # Public domain name
+  socket.domain = socket.${net.domain}  # WebSocket subdomain (derived)
+  protocol      = "http://"             # "http://" or "https://"
+  base_url      = ${net.protocol}${net.domain}
+  ip            = "127.0.0.1"           # Bind IP
+  asset.domain  = ${net.domain}         # Domain for serving assets
+  email         = "contact@lidraughts.org"
+  crawlable     = false                 # Allow search engine indexing
+  ratelimit     = true                  # Enable rate limiting
+}
+```
+
+| Key | Default | Description |
+|---|---|---|
+| `net.domain` | `lidraughts.org` | Primary domain. **Must be overridden.** |
+| `net.socket.domain` | `socket.<domain>` | Domain for WebSocket connections |
+| `net.protocol` | `http://` | Set to `https://` for TLS deployments |
+| `net.ip` | `127.0.0.1` | IP address the application binds to |
+| `net.asset.domain` | `<domain>` | Domain from which assets are served |
+| `net.crawlable` | `false` | Set `true` to allow search engine crawlers |
+| `net.ratelimit` | `true` | Enable HTTP rate limiting |
+
+---
+
+## `mongodb` — Database
+
+```hocon
+mongodb {
+  uri = "mongodb://127.0.0.1:27017/lidraughts"
+  mongo-async-driver = {}
+  image.collection = "image"
+}
+```
+
+The puzzle and insight modules use separate MongoDB databases:
+
+```hocon
+puzzle.mongodb.uri    = "mongodb://127.0.0.1:27017/lidraughts"
+insight.mongodb.uri   = "mongodb://127.0.0.1:27017/lidraughts-insight"
+oauth.mongodb.uri     = ${mongodb.uri}
+```
+
+---
+
+## `play` — Framework Settings
+
+### HTTP & Session
+
+```hocon
+play.http {
+  session {
+    cookieName = "lidraughts2"
+    maxAge     = 365 days
+  }
+  parser.maxMemoryBuffer = 1MB
+}
+```
+
+### Netty Server
+
+```hocon
+play.server.netty {
+  maxInitialLineLength = 2048  # Restricts max URL length
+  maxHeaderSize        = 4096  # Restricts max header / cookie size
+}
+```
+
+### Crypto
+
+```hocon
+play.crypto {
+  secret = "f9f5qcA[2eH7>v^5Mwu54Rh0mmU94A8ifl[:cT?mfp[^OTd1_oZMFU`aJAQKbkK8"
+}
+```
+
+<Warning>
+  The default `play.crypto.secret` is public and must be replaced with a strong, unique random value before going to production. Use a value of at least 64 random characters.
+</Warning>
+
+### WebService Client
+
+```hocon
+play.ws {
+  useragent          = "lidraughts.org"
+  compressionEnabled = true
+  timeout {
+    connection = 5 seconds
+    idle       = 5 minutes
+    request    = 5 minutes
+  }
+}
+```
+
+---
+
+## `app` — Application Behaviour
+
+```hocon
+app {
+  scheduler {
+    disabled = false  # Disable all background jobs
+    debug    = false  # Verbose scheduler logging
+  }
+  renderer.name = "renderer"
+  web_path      = "public"   # Path to compiled static assets
+  forcedev      = false
+  stage         = false
+}
+```
+
+---
+
+## `api` — Internal API
+
+```hocon
+api {
+  token = secret
+  influx_event {
+    endpoint = "http://monitor.lidraughts.org:8086/write?db=events"
+    env      = "dev"
+  }
+}
+```
+
+---
+
+## `draughtsnet` — Engine Worker
+
+See the [Draughtsnet guide](/self-hosting/draughtsnet) for full setup instructions.
+
+```hocon
+draughtsnet {
+  collection {
+    analysis = draughtsnet_analysis
+    client   = draughtsnet_client
+  }
+  offline_mode     = true       # Any client can provide moves/analysis without authentication
+  actor.name       = draughtsnet
+  analysis.nodes   = 5000000   # Nodes per move for full game analysis
+  commentary.nodes = 6000000   # Nodes per move for commentary/study analysis
+  move.plies       = 300       # Max plies for computer-move evaluation
+  client_min_version = "1.0.0" # Minimum accepted Draughtsnet client version
+}
+```
+
+| Key | Default | Description |
+|---|---|---|
+| `offline_mode` | `true` | When `true`, any client can submit moves/analysis without a registered API key |
+| `analysis.nodes` | `5000000` | Engine nodes per move for analysis requests |
+| `commentary.nodes` | `6000000` | Engine nodes per move for study commentary |
+| `move.plies` | `300` | Maximum number of plies for move evaluation |
+| `client_min_version` | `1.0.0` | Minimum version string accepted from workers |
+
+---
+
+## `security` — Authentication & Protection
+
+```hocon
+security {
+  collection.security  = security
+  collection.print_ban = print_ban
+  flood.duration       = 60 seconds
+  firewall {
+    cookie {
+      enabled = false
+      name    = fEKHA4zI74ZrZrom
+    }
+    collection.firewall = firewall
+  }
+  password_reset  { secret = "???" }  # Must be set for password reset emails
+  email_confirm   {
+    enabled = false
+    secret  = "???"
+    cookie  = "email_confirm"
+  }
+  email_change    { secret = "???" }  # Must be set for email-change flow
+  login_token     { secret = "???" }  # Must be set for magic-link login
+  csrf.enabled    = true
+  tor {
+    provider_url  = "https://check.torproject.org/cgi-bin/TorBulkExitList.py?ip="${net.ip}"&port=80"
+    refresh_delay = 1 hour
+  }
+  disposable_email {
+    provider_url  = "https://raw.githubusercontent.com/ornicar/disposable/publish/domains.txt"
+    refresh_delay = 10 minutes
+  }
+  dns_api {
+    url     = "https://cloudflare-dns.com/dns-query"
+    timeout = 5 seconds
+  }
+  recaptcha = ${recaptcha}
+  mailgun  = ${mailgun}
+}
+```
+
+<Warning>
+  The `secret` fields under `password_reset`, `email_confirm`, `email_change`, and `login_token` default to `"???"`and must be replaced with secure random strings before enabling those features.
+</Warning>
+
+---
+
+## `mailgun` — Email Delivery
+
+```hocon
+mailgun {
+  api {
+    url = ""  # e.g. https://api.mailgun.net/v3/yourdomain.org/messages
+    key = ""  # Mailgun private API key
+  }
+  sender   = "lidraughts.org <noreply@lidraughts.org>"
+  reply_to = "lidraughts.org <noreply@lidraughts.org>"
+}
+```
+
+---
+
+## `recaptcha` — CAPTCHA
+
+```hocon
+recaptcha {
+  endpoint   = "https://www.google.com/recaptcha/api/siteverify"
+  public_key = "6LcxLTUUAAAAAFwWrEgEehMJ6VXrtVOKIifTLGoW"
+  private_key = ""
+  enabled    = false
+}
+```
+
+Set `enabled = true` and supply your own `public_key` / `private_key` pair from Google reCAPTCHA.
+
+---
+
+## `search` — Elasticsearch
+
+```hocon
+search {
+  enabled   = false
+  writeable = false
+  endpoint  = "http://localhost:9673"
+}
+```
+
+Lidraughts supports optional Elasticsearch integration for game, forum, study, and team search. Disabled by default.
+
+---
+
+## `push` — Push Notifications
+
+```hocon
+push {
+  web {
+    vapid_public_key = ""
+    url              = ""
+  }
+  onesignal {
+    url    = "https://onesignal.com/api/v1/notifications"
+    app_id = ""
+    key    = ""
+  }
+  firebase {
+    url  = "https://fcm.googleapis.com/v1/projects/project-id/messages:send"
+    json = ""
+  }
+}
+```
+
+---
+
+## `plan` — Patron / Payment
+
+```hocon
+plan {
+  stripe {
+    endpoint = "https://api.stripe.com/v1"
+    keys {
+      public = "pk_test_..."
+      secret = "sk_test_..."
+    }
+  }
+  paypal {
+    ipn_key = ""
+  }
+}
+```
+
+<Warning>
+  The default Stripe keys are test credentials. Replace them with your live keys before accepting real payments.
+</Warning>
+
+---
+
+## Module-Specific Settings
+
+<Accordion title="game">
+```hocon
+game {
+  paginator.max_per_page = 12
+  collection {
+    game       = game5
+    crosstable = crosstable2
+    matchup    = matchup
+  }
+  captcher {
+    name     = captcher
+    duration = 15 seconds
+  }
+  uci_memo.ttl = 3 minutes
+  png {
+    url  = "http://localhost:8080/board.png"
+    size = 1024
+  }
+}
+```
+</Accordion>
+
+<Accordion title="round">
+```hocon
+round {
+  active.ttl = 40 seconds
+  moretime   = 15 seconds
+  player {
+    disconnect.timeout = 120 seconds
+    ragequit.timeout   = 10 seconds
+  }
+  socket {
+    timeout     = 30 seconds
+    uid.timeout = 10 seconds
+  }
+}
+```
+</Accordion>
+
+<Accordion title="tournament">
+```hocon
+tournament {
+  pairing.delay         = 3.1 seconds
+  leaderboard.cache.ttl = 1 hour
+  ranking.cache.ttl     = 1 hour
+  sequencer.timeout     = 10 minutes
+}
+```
+</Accordion>
+
+<Accordion title="swiss">
+```hocon
+swiss {
+  bbpairing = "/path/to/bbpPairings.exe"  # Required for Swiss pairings
+  sequencer.timeout = 10 minutes
+}
+```
+
+Set `swiss.bbpairing` to the path of the [bbpPairings](https://github.com/cyanfish/bbpPairings) binary.
+</Accordion>
+
+<Accordion title="puzzle">
+```hocon
+puzzle {
+  collection {
+    puzzle          = puzzle
+    puzzle_frisian  = puzzle_frisian
+    puzzle_russian  = puzzle_russian
+    round           = puzzle_round
+    round_frisian   = puzzle_round_frisian
+    round_russian   = puzzle_round_russian
+    vote            = puzzle_vote
+    head            = puzzle_head
+  }
+  selector.puzzle_id_min = 0
+}
+```
+</Accordion>
+
+<Accordion title="explorer & tablebase">
+```hocon
+explorer {
+  endpoint          = "https://expl.lidraughts.org"
+  internal_endpoint = "http://expl.lidraughts.org"
+  tablebase {
+    endpoint = "https://tablebase.lidraughts.org"
+  }
+}
+```
+
+Point these at your own opening explorer and tablebase servers if you are self-hosting those services.
+</Accordion>
+
+<Accordion title="geoip">
+```hocon
+geoip {
+  file      = "data/GeoLite2-City.mmdb"
+  cache_ttl = 20 minutes
+}
+```
+
+Download the MaxMind GeoLite2-City database and place it at the path specified.
+</Accordion>
+
+---
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/self-hosting/installation">
+    Step-by-step guide to running Lidraughts from source
+  </Card>
+  <Card title="Draughtsnet" icon="cpu" href="/self-hosting/draughtsnet">
+    Configure and connect engine workers for computer analysis
+  </Card>
+</CardGroup>

@@ -1,0 +1,162 @@
+---
+title: "Studies"
+description: "Create and share annotated game collections and analysis"
+---
+
+Studies are Lidraughts's system for persistent, shareable, collaborative game analysis. A study is a named collection of **chapters**, where each chapter is an annotated game tree with a starting position, variant, and orientation.
+
+## What is a study?
+
+A study lets you:
+
+- Collect and annotate draughts games or positions in one place
+- Collaborate with other users who can view or edit chapters in real time
+- Share your work publicly, with a link, or keep it private
+- Embed a chapter on an external website
+- Request engine evaluation for any chapter
+
+Studies are accessible at [lidraughts.org/study](https://lidraughts.org/study).
+
+<CardGroup cols={2}>
+  <Card title="All studies" icon="book-open" href="https://lidraughts.org/study">
+    Browse public studies
+  </Card>
+  <Card title="My studies" icon="user" href="https://lidraughts.org/study/mine/hot">
+    View and manage your own studies
+  </Card>
+  <Card title="Member studies" icon="users" href="https://lidraughts.org/study/member/hot">
+    Studies you are a member of
+  </Card>
+  <Card title="Search studies" icon="magnifying-glass" href="https://lidraughts.org/study/search">
+    Search all public studies by name
+  </Card>
+</CardGroup>
+
+## Creating a study
+
+<Steps>
+  <Step title="Start a new study">
+    Click **New study** from `/study` or POST to `/study`. You can also use `/study/as` to create a study from an existing game.
+  </Step>
+  <Step title="Name your study">
+    Enter a name (up to 100 characters). By default it is named `{username}'s Study`.
+  </Step>
+  <Step title="Configure settings">
+    Choose visibility, who can use the computer, who can clone the study, chat permissions, and whether the move list is sticky.
+  </Step>
+  <Step title="Add chapters">
+    Add one or more chapters to begin annotating.
+  </Step>
+</Steps>
+
+<Note>
+  A study can contain up to **64 chapters**. Each chapter can hold up to **3,000 nodes** in its move tree.
+</Note>
+
+## Adding chapters
+
+Each chapter has a setup that defines the starting position, variant, and board orientation.
+
+<Tabs>
+  <Tab title="From scratch">
+    Start from the initial position of any supported variant. Choose the variant and color orientation.
+  </Tab>
+  <Tab title="From a game">
+    Import a Lidraughts game by ID to start the chapter from that game's position.
+  </Tab>
+  <Tab title="From FEN">
+    Enter a FEN string to start from a custom position. The `fromFen` flag is set on the chapter setup.
+  </Tab>
+  <Tab title="From PDN">
+    POST PDN to `/study/{studyId}/import-pdn` to import one or multiple games as chapters. PDN tags and annotations are preserved.
+  </Tab>
+</Tabs>
+
+## Visibility settings
+
+Each study has one of three visibility levels:
+
+| Visibility | Who can view |
+|---|---|
+| **Public** | Anyone, including anonymous visitors |
+| **Unlisted** | Anyone with the direct link |
+| **Private** | Only members of the study |
+
+Private studies return a 401 Unauthorized response to non-members, both in HTML and API responses.
+
+## Collaborative editing
+
+Study members have one of two roles:
+
+| Role | Permissions |
+|---|---|
+| **Read** | View chapters and chat |
+| **Write** | Edit chapters, add moves, annotations, and comments |
+
+The study owner can always contribute. Multiple contributors can edit simultaneously via WebSocket (`/study/{id}/socket/v{apiVersion}`). Changes are broadcast to all connected members in real time.
+
+<Info>
+  The Lidraughts bot account (`lidraughts`) can always contribute to any study.
+</Info>
+
+### Study settings for collaboration
+
+The owner can configure per-study permissions using `UserSelection` values (`nobody`, `owner`, `contributor`, `member`, `everyone`) for:
+
+- **Computer analysis** — who can request engine evaluation
+- **Opening explorer** — who can use the explorer
+- **Cloneable** — who can clone the study
+- **Chat** — who can participate in the study chat (default: members only)
+
+## Exporting PDN
+
+You can download the full study or individual chapters as PDN:
+
+- Full study: `GET /study/{studyId}.pdn`
+- Single chapter: `GET /study/{studyId}/{chapterId}.pdn`
+
+PDN exports are rate-limited to 30 requests per minute per IP.
+
+## Cloning a study
+
+Any user can clone a public or unlisted study (subject to the study's `cloneable` setting).
+
+<Steps>
+  <Step title="Open the clone page">
+    Navigate to `GET /study/{studyId}/clone`.
+  </Step>
+  <Step title="Confirm the clone">
+    POST to `/study/{studyId}/cloneApply`. The cloned study is set to **Private** visibility and linked back to the original via `From.Study`.
+  </Step>
+</Steps>
+
+<Warning>
+  Cloning is rate-limited: regular users can clone **10 studies per day** (30 requests, cost 3 each). Coaches and titled players have a reduced cost of 1, allowing up to 30 clones per day.
+</Warning>
+
+## Embedding a study
+
+To embed a chapter on an external page, use the embed endpoint:
+
+```
+/study/embed/{studyId}/{chapterId}
+```
+
+The embed view strips member information and displays a read-only board. Only **public** studies can be embedded — private studies return a not-found page.
+
+<Tip>
+  Gamebook chapters support a special `?next=1` parameter in embeds that sequences through gamebook chapters automatically.
+</Tip>
+
+## Browsing studies
+
+Studies can be listed and sorted by several orderings. The following listing pages are available:
+
+- **All studies** — `/study/all/{order}` (hot, newest, oldest, updated, popular)
+- **By owner** — `/study/by/{username}/{order}`
+- **Search** — `/study/search?q={text}`
+- **Mine** — `/study/mine/{order}` (requires login)
+- **My public** — `/study/public/{order}`
+- **My private** — `/study/private/{order}`
+- **Member of** — `/study/member/{order}`
+- **Liked** — `/study/likes/{order}`

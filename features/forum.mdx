@@ -1,0 +1,134 @@
+---
+title: "Forum"
+description: "Discuss draughts on the Lidraughts forum"
+---
+
+The Lidraughts forum is a public discussion board organized into categories. Players can post topics, reply to others, react to posts, and participate in team-specific forum sections.
+
+Visit the forum at [lidraughts.org/forum](https://lidraughts.org/forum).
+
+## Forum categories
+
+The forum is organized into **categories** (`Categ`). Each category has a slug, name, description, and post/topic count. Categories are ordered by a `pos` field set by staff.
+
+Special category types:
+
+- **Staff forum** (`slug = "staff"`) — visible only to users with the `StaffForum` permission
+- **Team forums** (`team` field set) — each team automatically gets a forum category with the slug `team-{teamId}`; accessible only to team members
+- **Quiet categories** — posts in quiet categories do not appear in the recent posts feed or trigger timeline events (used for categories like `lidraughts-feedback` and `off-topic-discussion`)
+
+<CardGroup cols={2}>
+  <Card title="Forum index" icon="list" href="https://lidraughts.org/forum">
+    Browse all forum categories
+  </Card>
+  <Card title="Recent posts" icon="clock" href="https://lidraughts.org/forum/recent">
+    View the most recently updated topics across all categories
+  </Card>
+  <Card title="Search" icon="magnifying-glass" href="https://lidraughts.org/forum/search">
+    Search forum posts by keyword
+  </Card>
+</CardGroup>
+
+## Posting and replying
+
+### Creating a new topic
+
+<Steps>
+  <Step title="Choose a category">
+    Navigate to the category where you want to post: `/forum/{categSlug}`.
+  </Step>
+  <Step title="Open the topic form">
+    Click **New topic** or go to `/forum/{categSlug}/form`.
+  </Step>
+  <Step title="Write your post">
+    Enter a topic title and body text. Topic names are normalized (no all-caps shouting).
+  </Step>
+  <Step title="Submit">
+    POST to `/forum/{categSlug}/new`. The topic and its first post are created together.
+  </Step>
+</Steps>
+
+### Replying to a topic
+
+Open a topic at `/forum/{categSlug}/{slug}` and use the reply form at the bottom. POST to `/forum/{categSlug}/{slug}/new`.
+
+<Note>
+  To post in the forum you must have played at least one game **and** have had an account for at least 2 days. Titled players and verified accounts are exempt from this requirement.
+</Note>
+
+### Editing a post
+
+You can edit your own post within **3 hours** of creation. The edit form is shown for up to 3 hours; the post can actually be saved for up to **4 hours**. Up to 5 previous versions are stored in the post's edit history. POST to `/forum/post/{id}` to submit an edit.
+
+## Forum search
+
+Search across all public forum posts at `/forum/search?text={query}&page={n}`. If the query is empty, the search page falls back to listing all studies — for the forum index, use `/forum` instead.
+
+## Post reactions
+
+Users can react to any forum post with the following reactions:
+
+| Reaction | Type |
+|---|---|
+| `+1` | Positive |
+| `-1` | Negative |
+| `laugh` | Positive |
+| `thinking` | Neutral |
+| `heart` | Positive |
+| `horsey` | Positive |
+
+React via `POST /forum/post/{id}/react/{reaction}/{v}` where `v` is `true` to add or `false` to remove. When a post is edited, negative reactions (`-1`) are stripped from the stored reactions.
+
+## Moderation
+
+Forums can be moderated by Lidraughts staff (users with the `ModerateForum` permission) and by team owners in their team's forum category.
+
+### Available moderation actions
+
+<Accordion title="Close a topic">
+  Toggle a topic's closed state via `POST /forum/{categSlug}/{slug}/close`. Closed topics prevent new replies. The action is logged by the mod log.
+</Accordion>
+
+<Accordion title="Hide a topic">
+  Toggle a topic's visibility on the forum home via `POST /forum/{categSlug}/{slug}/hide`. Hidden topics are not shown in the recent posts feed. All posts in the topic are hidden from non-staff as well. Logged in the mod log.
+</Accordion>
+
+<Accordion title="Sticky a topic">
+  Toggle sticky status via `POST /forum/{categSlug}/{slug}/sticky`. Sticky topics are shown at the top of the category page, above the regular paginated list. Logged in the mod log.
+</Accordion>
+
+<Accordion title="Delete a post">
+  Delete any post via `POST /forum/{categSlug}/delete/{id}`. If the deleted post is the **first post** in a topic, the entire topic is deleted. Otherwise, only the post is removed and the topic/category counts are recalculated. Deletions are logged with the post text for audit purposes.
+</Accordion>
+
+<Warning>
+  Moderation actions in team forums are available to **team owners** (not just global moderators). Global moderators can moderate any category.
+</Warning>
+
+## Team forums
+
+Every Lidraughts team automatically has a forum category at `/forum/team-{teamId}`. Only team members can post in a team forum; the category is readable by everyone.
+
+Messages posted to team forums are recorded separately from public forum messages for the `shutup` (abuse detection) system.
+
+## Mentions
+
+You can mention other users in a post with `@username`. The `MentionNotifier` sends a notification to each mentioned user when the post is created.
+
+## FAQ
+
+<Accordion title="Why can't I post in the forum?">
+  You need to have played at least one game and have had your account for at least 2 days. Titled players and verified accounts bypass this restriction.
+</Accordion>
+
+<Accordion title="Can I post anonymously?">
+  No. You must be logged in to create topics or reply. Anonymous users can read public forums but cannot post.
+</Accordion>
+
+<Accordion title="Why is my post not showing on the forum home?">
+  Posts in categories like `lidraughts-feedback` and `off-topic-discussion` are automatically hidden from the home page if they are the first post in a new topic. Topics older than 5 days or topics with many replies may also be hidden. Moderators can un-hide topics manually.
+</Accordion>
+
+<Accordion title="How do I report a post?">
+  Use the **Report** button on the post, or contact a moderator directly. Global moderators can see and act on reported content.
+</Accordion>

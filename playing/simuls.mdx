@@ -1,0 +1,194 @@
+---
+title: "Simultaneous exhibitions"
+description: "Host or join simultaneous exhibitions on Lidraughts"
+---
+
+A **simultaneous exhibition** (simul) is an event where one player — the **host** — plays multiple games at the same time, each against a different challenger. Simuls are a classic draughts (and chess) tradition, often used by strong players to engage the community.
+
+<CardGroup cols={2}>
+  <Card title="Browse simuls" icon="chess-board" href="https://lidraughts.org/simul">
+    See all active and upcoming simultaneous exhibitions
+  </Card>
+  <Card title="Host a simul" icon="user" href="https://lidraughts.org/simul/new">
+    Create your own simultaneous exhibition
+  </Card>
+</CardGroup>
+
+---
+
+## How simuls work
+
+1. A **host** creates a simul, selecting variants, time controls, and a colour preference.
+2. **Challengers** join by selecting their preferred variant from the host's offered list.
+3. The host reviews applicants and **accepts or rejects** each challenger (or opens the simul to all).
+4. Once at least 2 challengers have been accepted, the host can **start** the simul.
+5. All games begin simultaneously. The host plays on each board in turn, moving to the next game after each move.
+6. The simul ends when all games are finished.
+
+<Note>
+  Simuls are always **casual** (unrated). They do not affect any player's rating.
+</Note>
+
+---
+
+## Hosting a simul
+
+<Steps>
+  <Step title="Open the simul creation form">
+    Navigate to [lidraughts.org/simul/new](https://lidraughts.org/simul/new).
+  </Step>
+  <Step title="Set the name">
+    Optionally give your simul a custom name (2–40 characters). The name cannot contain the word "lidraughts" or an unverified title. If left blank, a random name is generated.
+  </Step>
+  <Step title="Configure the clock">
+    Choose a **base time** (5–180 minutes), an **increment** (0–180 seconds), and an **extra time** bonus (0–120 minutes) given to the **host** to account for playing multiple boards.
+  </Step>
+  <Step title="Select variants">
+    Choose one or more variants that challengers may select. At least one variant is required.
+  </Step>
+  <Step title="Set colour and target">
+    Choose whether you play White, Black, or Random on each board. Optionally set a **target score percentage** (50–100%) to display a performance goal.
+  </Step>
+  <Step title="Add a description">
+    Optionally add a text description (shown to potential challengers).
+  </Step>
+  <Step title="Start when ready">
+    Once at least 2 challengers have accepted, click **Start** to begin all games simultaneously.
+  </Step>
+</Steps>
+
+<Tip>
+  The **extra time** feature is specifically designed for simul hosts. A 20-minute extra gives the host a buffer to handle the think-time cost of switching between many boards.
+</Tip>
+
+### Clock defaults
+
+| Setting | Default |
+|---|---|
+| Base time | 20 minutes |
+| Increment | 60 seconds |
+| Extra time for host | 0 minutes |
+
+---
+
+## Joining a simul as a challenger
+
+<Steps>
+  <Step title="Find an open simul">
+    Browse [lidraughts.org/simul](https://lidraughts.org/simul) for simuls in the **Created** state (not yet started).
+  </Step>
+  <Step title="Select your variant">
+    Click **Join** and choose which variant you want to play from the host's offered list.
+  </Step>
+  <Step title="Wait for acceptance">
+    The host reviews applicants. You will be notified once accepted.
+  </Step>
+  <Step title="Play when the simul starts">
+    When the host starts the simul, your game begins. Play normally — the host will come to your board between moves on other boards.
+  </Step>
+</Steps>
+
+<Info>
+  If the simul has an **allowed list**, only specifically invited players can join. The host manages the allowed list via the arbiter controls.
+</Info>
+
+---
+
+## Supported variants
+
+Simuls support all seven Lidraughts variants:
+
+<CardGroup cols={2}>
+  <Card title="Standard" icon="circle">
+    International draughts on 10×10
+  </Card>
+  <Card title="Frisian" icon="circle">
+    Horizontal and vertical captures on 10×10
+  </Card>
+  <Card title="Frysk!" icon="circle">
+    Frisian draughts starting with 5 pieces
+  </Card>
+  <Card title="Antidraughts" icon="circle">
+    Lose all your pieces to win — 10×10
+  </Card>
+  <Card title="Breakthrough" icon="circle">
+    First to promote a king wins — 10×10
+  </Card>
+  <Card title="Russian" icon="circle">
+    Russian draughts on 8×8
+  </Card>
+  <Card title="Brazilian" icon="circle">
+    International rules on 8×8
+  </Card>
+</CardGroup>
+
+A host can offer **multiple variants** in a single simul. Each challenger independently chooses which variant they want to play.
+
+---
+
+## Arbiter role
+
+Simuls support an optional **arbiter** — a trusted third party who can:
+
+- Monitor all games simultaneously.
+- Settle disputed results (`/simul/:id/settle/:user/:res`).
+- Manage the allowed/blocked list of challengers.
+- Control chat permissions and engine analysis settings.
+
+The arbiter is assigned by the simul system administrators and is identified by `arbiterId` in the simul record.
+
+---
+
+## Simul statistics
+
+During and after a simul, the host's performance is tracked:
+
+| Stat | Description |
+|---|---|
+| Wins | Games the host won |
+| Draws | Games that ended in a draw |
+| Losses | Games the host lost |
+| Ongoing | Games still in progress |
+| Winning % | `(wins + draws × 0.5) / finished × 100` |
+
+If a **target percentage** was set, the simul page also shows whether the host has reached, failed, or is still working toward their goal.
+
+---
+
+## Featured simuls
+
+Simuls hosted by strong players (rating ≥ 2100 or titled players) are automatically eligible to appear on the Lidraughts **homepage** as featured events, provided the simul has fewer than 80 applicants.
+
+Official Lidraughts-organised simuls ("unique" simuls with a spotlight) are always featured when running.
+
+---
+
+## Exporting simul games
+
+After a simul ends, all games can be exported in PDN format via:
+
+```
+GET /simul/:id/export
+```
+
+This provides a complete record of every game played in the exhibition.
+
+---
+
+## Frequently asked questions
+
+<Accordion title="Can I play in a simul if I'm not logged in?">
+  No. You must be a logged-in Lidraughts user to join a simul as a challenger.
+</Accordion>
+
+<Accordion title="Does the host have to accept everyone who applies?">
+  No. The host can accept or reject individual applicants. They can also create an **allowed list** to restrict who may even apply.
+</Accordion>
+
+<Accordion title="What happens if the host disconnects?">
+  The system tracks the host's last seen time (`hostSeenAt`). If the host is absent for too long, the simul may be aborted. The host should use the **host ping** endpoint to signal activity.
+</Accordion>
+
+<Accordion title="Can a simul be played across different variants simultaneously?">
+  Yes. The host can offer multiple variants, and different challengers can each be playing a different variant against the host at the same time.
+</Accordion>

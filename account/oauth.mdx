@@ -1,0 +1,150 @@
+---
+title: "OAuth & API tokens"
+description: "Authenticate with Lidraughts API using OAuth2 and personal access tokens"
+---
+
+Lidraughts supports two ways for applications and scripts to authenticate with the API:
+
+<CardGroup cols={2}>
+  <Card title="Personal access tokens" icon="key">
+    Long-lived tokens you create manually in your account settings. Best for personal scripts and tools.
+  </Card>
+  <Card title="OAuth 2.0 apps" icon="shield-check">
+    Third-party applications that users authorise. Best for apps used by multiple people.
+  </Card>
+</CardGroup>
+
+---
+
+## Personal access tokens
+
+Personal tokens let you call the API on behalf of your own account without going through an OAuth authorization flow.
+
+<Steps>
+  <Step title="Open the token creation page">
+    Navigate to `/account/oauth/token/create` while logged in.
+  </Step>
+  <Step title="Add a description">
+    Give the token a short description (3–140 characters) so you can identify it later.
+  </Step>
+  <Step title="Select scopes">
+    Tick the scopes that match the permissions your script needs. Only grant what is required.
+  </Step>
+  <Step title="Create the token">
+    Submit the form. The token value is shown **once** immediately after creation — copy and store it securely. It cannot be retrieved again.
+  </Step>
+</Steps>
+
+<Warning>
+  Treat personal access tokens like passwords. Anyone who obtains a token can act on your behalf for the scopes it covers.
+</Warning>
+
+### Using a token with the API
+
+Pass the token in the `Authorization` header as a Bearer token:
+
+```bash
+# Read your own account details
+curl https://lidraughts.org/api/account \
+  -H "Authorization: Bearer your_token_here"
+
+# Read your email address (requires email:read scope)
+curl https://lidraughts.org/api/account/email \
+  -H "Authorization: Bearer your_token_here"
+
+# Read your current preferences (requires preference:read scope)
+curl https://lidraughts.org/api/account/preferences \
+  -H "Authorization: Bearer your_token_here"
+```
+
+### Managing existing tokens
+
+View all your personal tokens at `/account/oauth/token`. To revoke a token, click **Delete** next to it or send a `POST` request to `/account/oauth/token/:id/delete`.
+
+---
+
+## OAuth scopes
+
+Scopes limit what an access token is allowed to do. Always use the minimum set of scopes required.
+
+| Scope | Key | Description |
+|---|---|---|
+| Read preferences | `preference:read` | Read account preferences |
+| Write preferences | `preference:write` | Update account preferences |
+| Read email | `email:read` | Read the account's email address |
+| Read challenges | `challenge:read` | Read incoming challenges |
+| Write challenges | `challenge:write` | Create, accept, and decline challenges |
+| Write tournaments | `tournament:write` | Create and update tournaments |
+| Read puzzles | `puzzle:read` | Read puzzle activity |
+| Write teams | `team:write` | Join, leave, and manage teams |
+| Bot play | `bot:play` | Play games with the bot API |
+
+---
+
+## OAuth 2.0 apps
+
+If you are building an application that other Lidraughts users will authorise, register an OAuth app instead of sharing a personal token.
+
+### Registering an app
+
+<Steps>
+  <Step title="Open the app creation page">
+    Navigate to `/account/oauth/app/create`.
+  </Step>
+  <Step title="Fill in the app details">
+    Provide:
+    - **Name** — displayed to users on the authorization screen (3–90 characters)
+    - **Description** — optional description of what the app does (up to 400 characters)
+    - **Homepage URL** — the public URL of your application
+    - **Redirect URI** — where Lidraughts sends users after they authorize your app
+  </Step>
+  <Step title="Save the credentials">
+    After creation you are taken to the app edit page at `/account/oauth/app/:id/edit`. Your **client ID** and **client secret** are shown here — store the secret securely.
+  </Step>
+</Steps>
+
+### Authorization flow
+
+Lidraughts uses the standard OAuth 2.0 authorization code flow:
+
+<Steps>
+  <Step title="Redirect the user to Lidraughts">
+    Send the user to the Lidraughts authorization endpoint with your `client_id`, requested `scope` list, `redirect_uri`, and a `state` parameter for CSRF protection.
+  </Step>
+  <Step title="User approves the request">
+    The user is shown which scopes your app is requesting and can approve or deny.
+  </Step>
+  <Step title="Receive the authorization code">
+    On approval, Lidraughts redirects to your `redirect_uri` with a short-lived `code` query parameter.
+  </Step>
+  <Step title="Exchange code for access token">
+    Your server exchanges the `code` for an access token by posting to the token endpoint with your `client_secret`.
+  </Step>
+  <Step title="Call the API">
+    Use the access token as a Bearer token in the `Authorization` header, identical to personal tokens.
+  </Step>
+</Steps>
+
+### Managing your apps
+
+All registered apps are listed at `/account/oauth/app`. You can edit an app's details at `/account/oauth/app/:id/edit` or delete it with a `POST` to `/account/oauth/app/:id/delete`.
+
+---
+
+## Revoking tokens
+
+<Tabs>
+  <Tab title="Personal tokens">
+    Go to `/account/oauth/token`, find the token in the list, and click **Delete**. The token is immediately invalidated.
+  </Tab>
+  <Tab title="App tokens (as a user)">
+    Tokens issued to third-party OAuth apps can be revoked from the same `/account/oauth/token` list. Each authorized app session appears as a separate entry.
+  </Tab>
+  <Tab title="App tokens (as a developer)">
+    Delete your registered OAuth app at `/account/oauth/app/:id/delete` to invalidate all tokens associated with it at once.
+  </Tab>
+</Tabs>
+
+<Info>
+  Tokens have no built-in expiry date. Revoke them manually when they are no longer needed to reduce your attack surface.
+</Info>

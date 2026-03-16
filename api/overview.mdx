@@ -1,0 +1,84 @@
+---
+title: "API Overview"
+description: "Lidraughts REST API reference"
+---
+
+The Lidraughts API gives you programmatic access to games, users, tournaments, challenges, and more. All API endpoints are served over HTTPS from the base URL below.
+
+## Base URL
+
+```
+https://lidraughts.org
+```
+
+All paths in this reference are relative to this base URL. For example, `GET /api/user/:name` means `GET https://lidraughts.org/api/user/:name`.
+
+## Response format
+
+Most endpoints return **JSON**. Streaming endpoints return **NDJSON** (newline-delimited JSON), where each line is a complete JSON object. Streaming responses use `Content-Type: application/x-ndjson`.
+
+Game export endpoints can return either **PDN** (Portable Draughts Notation) or JSON depending on the `Accept` header or query parameters you send.
+
+<Info>
+PDN is the draughts equivalent of PGN in chess. It encodes moves, headers, and metadata for a draughts game.
+</Info>
+
+## Authentication
+
+Many endpoints are publicly accessible without authentication. Endpoints that access private data or perform write actions require a **Bearer token** in the `Authorization` header.
+
+See the [Authentication](/api/authentication) page for full details on personal access tokens and OAuth2.
+
+## Rate limiting
+
+The API enforces rate limits to ensure fair usage. Limits vary by endpoint — some are per-IP, some are per-user, and some have a global cap. When a limit is exceeded the API responds with HTTP `429 Too Many Requests`.
+
+To stay within limits:
+- Cache responses when possible.
+- Avoid polling in tight loops; use streaming endpoints instead.
+- Authenticated requests often receive more generous limits than anonymous ones.
+
+## API versioning
+
+The API exposes a version status endpoint:
+
+```
+GET /api/status
+```
+
+This returns the current API version and any deprecated old versions, along with their `deprecatedAt` and `unsupportedAt` dates. Mobile clients can also pass a `v` query parameter to check whether an app version must be upgraded.
+
+## Common patterns
+
+### Pagination
+
+Endpoints that return lists typically accept a `page` query parameter (1-indexed) and a `nb` parameter to control page size.
+
+### Streaming endpoints
+
+Several endpoints stream data in real time using NDJSON over a persistent HTTP connection. These are useful for watching live games or listening for incoming challenges and game starts. Keep the connection open and process each line as it arrives.
+
+```bash
+# Example: stream incoming events
+curl https://lidraughts.org/api/stream/event \
+  -H "Authorization: Bearer your_token"
+```
+
+### Boolean flags
+
+Query parameters that act as boolean switches accept `true` or `false`. Omitting them is equivalent to `false` unless otherwise noted.
+
+### Timestamps
+
+Timestamps are Unix milliseconds (13-digit integers).
+
+## Quick links
+
+- [Authentication](/api/authentication)
+- [Users](/api/users)
+- [Games](/api/games)
+- [Tournaments](/api/tournaments)
+- [Challenges](/api/challenges)
+- [Bot API](/api/bot)
+- [Account](/api/account)
+- [Teams](/api/teams)

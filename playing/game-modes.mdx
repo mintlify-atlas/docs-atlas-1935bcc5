@@ -1,0 +1,155 @@
+---
+title: "Game modes"
+description: "Ways to play draughts on Lidraughts"
+---
+
+Lidraughts offers several ways to start a game, from finding a random opponent in the lobby to challenging a specific friend or testing yourself against the computer.
+
+## Quick start
+
+<CardGroup cols={2}>
+  <Card title="Play in the Lobby" icon="chess-board" href="https://lidraughts.org/?any#hook">
+    Post a seek and get matched with a random opponent
+  </Card>
+  <Card title="Challenge a Friend" icon="user-group" href="https://lidraughts.org/setup/friend">
+    Send a direct challenge by username
+  </Card>
+  <Card title="Play vs Computer" icon="robot" href="https://lidraughts.org/setup/ai">
+    Face the Scan 3.1 engine at eight difficulty levels
+  </Card>
+  <Card title="Correspondence" icon="envelope" href="https://lidraughts.org/?any#hook">
+    Take your time with days-per-move games
+  </Card>
+</CardGroup>
+
+---
+
+## Lobby (seek / hook)
+
+The lobby is the central hub for finding opponents. When you post a **hook** (a real-time seek), Lidraughts broadcasts it to all other players in the lobby. Any player whose preferences overlap with yours can click your hook to start the game.
+
+<Steps>
+  <Step title="Open the lobby">
+    Navigate to [lidraughts.org](https://lidraughts.org). The lobby shows all active seeks and the current TV game.
+  </Step>
+  <Step title="Configure your game">
+    Click **Create a game** and set your preferred time control, variant, rating range, and colour preference.
+  </Step>
+  <Step title="Post the hook">
+    Click **OK**. Your seek appears in the lobby grid. When an opponent accepts it, the game starts automatically.
+  </Step>
+</Steps>
+
+<Tip>
+  You can also click an existing hook in the lobby to accept someone else's seek instantly.
+</Tip>
+
+The lobby setup is handled by the `/setup/hook` endpoint. Hooks are **real-time only**; correspondence seeks are posted as named **seeks** visible to logged-in users.
+
+---
+
+## Challenge a friend
+
+You can send a direct challenge to any Lidraughts user, bypassing the lobby entirely.
+
+<Steps>
+  <Step title="Open the friend challenge form">
+    Go to [lidraughts.org/setup/friend](https://lidraughts.org/setup/friend), or click a player's name and choose **Challenge to a game**.
+  </Step>
+  <Step title="Set game options">
+    Choose variant, time control, mode (rated/casual), and your colour preference. Friend challenges also support the **micro-match** option (a two-game mini-match with reversed colours).
+  </Step>
+  <Step title="Send the challenge">
+    The opponent receives a notification and can accept or decline from [lidraughts.org/challenge](https://lidraughts.org/challenge).
+  </Step>
+</Steps>
+
+<Note>
+  Friend challenges can be **casual or rated**, and support every variant available on Lidraughts. Correspondence (days-per-move) challenges are also supported.
+</Note>
+
+---
+
+## Play vs Computer
+
+Lidraughts integrates [Scan 3.1](https://github.com/rhalbersma/scan) — Fabien Letouzey's engine for 10×10 draughts variants. Computer games are always **casual** (unrated) and are set up at `/setup/ai`.
+
+### Difficulty levels
+
+The AI has **8 levels**, from 1 (beginner) to 8 (strongest). The default is level 1.
+
+<Tabs>
+  <Tab title="Beginner (1–2)">
+    Makes deliberate mistakes and plays slowly. Suitable for beginners learning piece movement and basic captures.
+  </Tab>
+  <Tab title="Intermediate (3–5)">
+    Plays reasonably solid draughts with occasional inaccuracies. Good for practising tactics.
+  </Tab>
+  <Tab title="Advanced (6–8)">
+    Plays at a strong club-player level and above. Level 8 represents near-engine strength.
+  </Tab>
+</Tabs>
+
+### Supported variants
+
+The computer can play **all 10×10 variants** (Standard, Frisian, Frysk!, Antidraughts, Breakthrough) as well as **From Position**. The 8×8 variants (Russian, Brazilian) are available in human-vs-human games but are not listed among the AI variants in the current configuration.
+
+<Info>
+  You can also set a custom starting position (FEN) when playing against the computer by selecting **From Position** as the variant.
+</Info>
+
+---
+
+## Correspondence
+
+Correspondence games use a **days-per-move** clock instead of a countdown timer. Each player has a fixed number of days to make each individual move.
+
+| Setting | Description |
+|---|---|
+| Time mode | Correspondence |
+| Days per move | 1–14 days (configurable) |
+| Default | 2 days per move |
+| Rated | Yes (when between registered users) |
+
+<Note>
+  Correspondence seeks are only available to **logged-in users**. Anonymous players cannot post or accept correspondence seeks.
+</Note>
+
+Correspondence games are a good way to study positions deeply — you can use the board analysis tool between moves.
+
+---
+
+## Time controls
+
+Lidraughts classifies real-time games by the estimated total duration of a game. The categories and their clock ranges are:
+
+| Category | Estimated duration | Example clocks |
+|---|---|---|
+| UltraBullet | < 30 s | 0+1, 15+0 |
+| HyperBullet | 30 s – 1 min | 0+2, 30+0 |
+| Bullet | 1 – 2 min | 1+0, 1+1, 2+0 |
+| Blitz | 2 – 8 min | 3+0, 3+2, 5+0 |
+| Rapid | 8 – 25 min | 10+0, 10+5, 15+0 |
+| Classical | ≥ 25 min | 20+10, 30+0 |
+
+The speed category determines which rating you use for a game. Each variant has its own rating for each speed category.
+
+<Tip>
+  Clock times range from 0 to 180 minutes; increments range from 0 to 180 seconds. A game with no time and no increment is played as **Unlimited** (untimed).
+</Tip>
+
+---
+
+## Time mode summary
+
+<Tabs>
+  <Tab title="Real-time">
+    Both players have a countdown clock. This is the standard mode for lobby seeks and tournaments.
+  </Tab>
+  <Tab title="Correspondence">
+    Each player has a set number of days per move. Games can span days or weeks.
+  </Tab>
+  <Tab title="Unlimited">
+    No clock at all. Always casual. Useful for analysis or leisurely play.
+  </Tab>
+</Tabs>

@@ -1,0 +1,138 @@
+---
+title: "Registration & authentication"
+description: "Create your Lidraughts account and manage security settings"
+---
+
+## Creating an account
+
+Anyone can register a free Lidraughts account at [lidraughts.org/signup](https://lidraughts.org/signup). No payment or personal information beyond a username and email address is required.
+
+<Steps>
+  <Step title="Fill in the signup form">
+    Navigate to `/signup` and provide:
+    - **Username** — your public display name on the site
+    - **Email address** — used for account recovery and optional notifications
+    - **Password** — choose a strong, unique password
+  </Step>
+  <Step title="Pass the CAPTCHA">
+    Complete the reCAPTCHA challenge to confirm you are not a bot. The signup form uses Google reCAPTCHA on the web.
+  </Step>
+  <Step title="Confirm your email">
+    Depending on your IP address and browser fingerprint, Lidraughts may require email confirmation before allowing login. Check your inbox for a confirmation link sent to the address you provided.
+  </Step>
+  <Step title="Start playing">
+    After confirmation (or immediately if none was required), you are redirected to your profile page and can start playing.
+  </Step>
+</Steps>
+
+<Note>
+  Mobile app signups always require email confirmation before the account becomes active.
+</Note>
+
+---
+
+## Logging in
+
+Visit `/login` and enter your **username or email address** together with your password. If you have two-factor authentication enabled, you will also be prompted for your TOTP code.
+
+After a successful login you are redirected back to where you came from, or to the lobby if no referrer is present.
+
+<Warning>
+  Login attempts are rate-limited per IP address and username to protect against brute-force attacks. Too many failed attempts will result in a temporary block.
+</Warning>
+
+---
+
+## Password reset
+
+If you forget your password, use the self-service reset flow:
+
+<Steps>
+  <Step title="Request a reset link">
+    Go to `/password/reset` and enter the email address associated with your account.
+  </Step>
+  <Step title="Check your email">
+    Lidraughts sends a time-limited reset link to the address on file. The sent-confirmation page at `/password/reset/sent/:email` confirms dispatch.
+  </Step>
+  <Step title="Set a new password">
+    Click the link in the email to reach `/password/reset/confirm/:token`. Enter and confirm your new password.
+  </Step>
+</Steps>
+
+<Info>
+  Completing a password reset also disables two-factor authentication and signs out all existing sessions, so you start fresh.
+</Info>
+
+---
+
+## Two-factor authentication (2FA)
+
+Lidraughts supports TOTP-based two-factor authentication using any standard authenticator app (Google Authenticator, Authy, etc.).
+
+<Tabs>
+  <Tab title="Enabling 2FA">
+    <Steps>
+      <Step title="Open the 2FA settings page">
+        Navigate to `/account/twofactor`. If 2FA is not yet enabled you will see the setup form.
+      </Step>
+      <Step title="Scan the QR code">
+        Scan the displayed QR code with your authenticator app, or enter the secret key manually.
+      </Step>
+      <Step title="Verify with a code">
+        Enter the 6-digit code shown in your authenticator app together with your current password to confirm setup.
+      </Step>
+      <Step title="Done">
+        2FA is now active. All existing sessions except the current one are signed out automatically.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Disabling 2FA">
+    Go to `/account/twofactor` while logged in. You will be shown a disable form that requires your current password and a valid TOTP code. Submit the form to remove 2FA from your account.
+  </Tab>
+</Tabs>
+
+<Warning>
+  Store your authenticator app backup codes in a safe place. If you lose access to your authenticator and cannot log in, a moderator can disable 2FA for you via the mod tools.
+</Warning>
+
+---
+
+## Account security & session management
+
+The security dashboard at `/account/security` lists all active login sessions, including the approximate location and device for each one.
+
+<CardGroup cols={2}>
+  <Card title="Sign out one session" icon="right-from-bracket">
+    Click the sign-out button next to any individual session to revoke it immediately. The session ID is sent to `POST /account/signout/:sessionId`.
+  </Card>
+  <Card title="Sign out all other sessions" icon="shield-xmark">
+    Use the **"Sign out all other devices"** option (`sessionId = "all"`) to revoke every session except your current one.
+  </Card>
+</CardGroup>
+
+---
+
+## Kid mode
+
+Kid mode restricts communication features to keep younger players safe. When enabled, chat and messaging are disabled.
+
+- Toggle kid mode at `/account/kid`.
+- The current state can be read and written via the API at `GET /api/account/kid` and `POST /api/account/kid?v=true` (requires the `preference:read` / `preference:write` OAuth scope).
+
+<Tip>
+  Parents and educators can enable kid mode on a shared account before handing a device to a child.
+</Tip>
+
+---
+
+## Email address management
+
+Change your registered email address at `/account/email`. Lidraughts sends a confirmation link to the new address; the change takes effect only after you click that link.
+
+Your current email can also be retrieved through the API at `GET /api/account/email` (requires the `email:read` OAuth scope).
+
+---
+
+## Closing your account
+
+You can close your account permanently from `/account/close`. You will be asked to confirm using the account's password. Closed accounts can be reopened by a moderator upon request.

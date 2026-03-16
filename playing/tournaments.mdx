@@ -1,0 +1,248 @@
+---
+title: "Tournaments"
+description: "Compete in Arena and Swiss tournaments on Lidraughts"
+---
+
+Lidraughts hosts two tournament formats: **Arena** (continuous-pairing) and **Swiss** (fixed-round). Both formats support all variants, rated play, and team battles.
+
+<CardGroup cols={2}>
+  <Card title="Arena tournaments" icon="bolt" href="https://lidraughts.org/tournament">
+    Join or leave at any time — games are paired continuously throughout the event
+  </Card>
+  <Card title="Swiss tournaments" icon="table" href="https://lidraughts.org/swiss">
+    Fixed rounds with a traditional Swiss pairing system, open to team members
+  </Card>
+</CardGroup>
+
+---
+
+## Arena tournaments
+
+Arena is Lidraughts' signature tournament format. The event runs for a fixed duration (typically 20 minutes to 6+ hours) and games are paired **continuously** — as soon as you finish one game, you are paired into the next.
+
+### How to join
+
+<Steps>
+  <Step title="Find a tournament">
+    Go to [lidraughts.org/tournament](https://lidraughts.org/tournament). Upcoming and in-progress tournaments are listed on the home page. Featured official tournaments appear on the Lidraughts homepage.
+  </Step>
+  <Step title="Join the tournament">
+    Click **Join** on the tournament page. You can join at any point while the tournament is running — even mid-event.
+  </Step>
+  <Step title="Play your games">
+    After joining, you will be paired automatically. Play your game and return to the tournament lobby; the next pairing is arranged immediately after your game ends.
+  </Step>
+  <Step title="Pause or withdraw">
+    Click **Withdraw** to temporarily stop being paired. You can rejoin at any time without penalty.
+  </Step>
+</Steps>
+
+<Tip>
+  If you do not make a move in a game, you are removed from the tournament automatically. Reconnect and rejoin to continue participating.
+</Tip>
+
+### Arena scoring
+
+Points are awarded per game based on result and streak status:
+
+| Result | Normal | On a streak (2+ consecutive wins) |
+|---|---|---|
+| Win | 2 points | 4 points |
+| Draw | 1 point | 2 points |
+| Loss | 0 points | 0 points |
+
+A **streak** starts when you win two games in a row. Each subsequent win while on a streak scores double points. A draw or loss breaks the streak.
+
+### Berserk
+
+Before a game starts, you can click the **berserk** button to halve your clock time in exchange for a bonus point if you win.
+
+- Your clock is cut in half (e.g. 5+0 becomes 2:30+0).
+- If you **win** the game with sufficient time used, you earn **+1 bonus point** on top of the normal score.
+- If you lose or draw, you gain no bonus — and played with half the time.
+- Berserking is only available when the tournament allows it (`berserkable = true`). The tournament organiser can disable berserking.
+
+<Warning>
+  A berserk win only counts as a valid berserk (earning the bonus) if the game lasts long enough — very quick wins after berserking may not award the bonus point.
+</Warning>
+
+### Arena pairing
+
+Arena uses a **similar-score pairing** algorithm. Players with close scores are paired together, with some randomness to avoid always facing the same opponent. You will not be paired against the same player twice in a row.
+
+---
+
+## Swiss tournaments
+
+Swiss tournaments are **team-based**, fixed-round events. They must be created within a Lidraughts team (`/swiss/new/:teamId`). The number of rounds is set in advance (default 8, maximum 100).
+
+### How to join
+
+<Steps>
+  <Step title="Find a Swiss tournament">
+    Swiss tournaments are listed at [lidraughts.org/swiss](https://lidraughts.org/swiss) and on the tournament pages of individual teams.
+  </Step>
+  <Step title="Join your team's Swiss">
+    You must be a member of the team that hosts the Swiss. Click **Join** to register before the event starts.
+  </Step>
+  <Step title="Play each round">
+    Rounds are paired according to the Swiss system. You play one game per round. Results carry forward to determine future pairings.
+  </Step>
+  <Step title="Wait for next round">
+    Between rounds, the system calculates pairings. The round interval is either automatic (based on clock speed) or manually set by the organiser.
+  </Step>
+</Steps>
+
+### Swiss scoring
+
+| Result | Points |
+|---|---|
+| Win | 1 point |
+| Draw | 0.5 points |
+| Loss | 0 points |
+| Bye (absent) | 0 points |
+
+Tiebreaks use **Sonneborn-Berger** (performance against opponents, weighted by those opponents' scores).
+
+### Swiss settings
+
+| Setting | Default | Range |
+|---|---|---|
+| Number of rounds | 8 | 3–100 |
+| Clock | 3+0 | Any valid clock |
+| Rated | Yes | Yes / No |
+| Round interval | Automatic | 5 s – 7 days, or manual |
+
+The **automatic round interval** is derived from the clock speed:
+
+| Speed | Auto interval |
+|---|---|
+| UltraBullet | 5 seconds |
+| Bullet | 10 seconds |
+| Blitz (< 5 min) | 20 seconds |
+| Blitz | 30 seconds |
+| Rapid | 60 seconds |
+| Classical | 5 minutes |
+
+Organisers can also choose **manual scheduling**, triggering each round themselves via `/swiss/:id/schedule-next-round`.
+
+<Note>
+  Swiss tournaments support up to **2,000 players** per event. You can only enter if fewer than half the rounds have been played (`round ≤ nbRounds / 2`).
+</Note>
+
+### Exporting Swiss results
+
+Swiss results can be exported in **TRF format** (FIDE standard) via `/swiss/:id.trf`, suitable for importing into tournament management software.
+
+---
+
+## Tournament types and schedule
+
+Lidraughts runs an automatic schedule of official tournaments covering all variants and speeds.
+
+### Frequency tiers
+
+| Frequency | Description |
+|---|---|
+| Hourly | Every hour — short, fast events |
+| Daily | Once per day — standard community events |
+| Eastern | Once per day at a different time (Asia/Oceania-friendly) |
+| Weekly | Once per week — longer duration |
+| Weekend | Saturday/Sunday special events |
+| Monthly | Once per month — prestigious community tournaments |
+| Shield | Monthly — prestige title tournaments (see below) |
+| Marathon | 24-hour endurance events |
+| Yearly | Annual flagship events |
+
+### Duration examples
+
+| Frequency + Speed | Duration |
+|---|---|
+| Hourly Bullet | 27 minutes |
+| Daily Blitz | 120 minutes |
+| Weekly Rapid | 4 hours |
+| Shield Blitz | 6 hours |
+| Marathon | 24 hours |
+
+---
+
+## Shields
+
+Shield tournaments are **monthly prestige events** for each speed category and each variant. The Shield categories are:
+
+**Speed shields**: Bullet, SuperBlitz, Blitz, Rapid, HyperBullet
+
+**Variant shields**: Frisian, Frysk!, Antidraughts, Breakthrough, Russian, Brazilian
+
+The winner of a Shield tournament **holds the Shield** until the next Shield tournament of the same category. If the current holder plays in the next Shield, they must **defend** the title.
+
+> *"The winner keeps it for one month, then must defend it during the next [variant] Shield tournament!"*
+
+Shield history is available at [lidraughts.org/tournament/shields](https://lidraughts.org/tournament/shields).
+
+---
+
+## Team Battles
+
+A **Team Battle** is an Arena tournament where players represent their Lidraughts team. The top scores from each team's members are combined to produce a team ranking.
+
+- Up to **100 teams** can participate in a single Team Battle.
+- The organiser sets how many **top players per team** count towards the team score (`nbLeaders`, default 5, maximum 20).
+- Individual players still score points normally and appear on the individual leaderboard.
+- Team standings are updated live during the tournament.
+
+<Info>
+  Team Battles can be created from any team page by eligible team leaders. The tournament URL includes `/tournament/team-battle/new/:teamId`.
+</Info>
+
+---
+
+## Leaderboards
+
+Lidraughts maintains arena **leaderboards** tracking the top performers across all official tournaments. The leaderboard is accessible at [lidraughts.org/tournament/leaderboard](https://lidraughts.org/tournament/leaderboard).
+
+---
+
+## Entry conditions
+
+Tournaments can restrict entry by:
+
+| Condition | Description |
+|---|---|
+| Minimum rated games | Must have played N rated games in the relevant variant |
+| Minimum rating | Must have a rating of at least N |
+| Maximum rating | Rating cap (e.g. U1800 tournaments) |
+| Titled players only | Must have a verified title |
+| Team membership | Team Battles require membership in the relevant team |
+
+<Tip>
+  Variant tournaments (Frisian, Antidraughts, etc.) generally have **no entry conditions**, making them open to all players regardless of rating or game count.
+</Tip>
+
+---
+
+## Creating a tournament
+
+Any registered user can create an Arena tournament.
+
+<Steps>
+  <Step title="Open the creation form">
+    Go to [lidraughts.org/tournament/new](https://lidraughts.org/tournament/new).
+  </Step>
+  <Step title="Set clock and duration">
+    Choose a clock time (0–60 min) and increment (0–60 s). Set the tournament duration (20 min to 6 hours for regular users).
+  </Step>
+  <Step title="Choose variant and mode">
+    Select any of the seven supported variants and whether the tournament is rated or casual.
+  </Step>
+  <Step title="Optional settings">
+    Optionally add a password (private tournament), enable/disable berserk, enable/disable streaks, add a description, or configure entry conditions.
+  </Step>
+  <Step title="Publish">
+    The tournament enters a waiting period before starting. The default wait is 5 minutes; you can set a custom start date up to 31 days in the future (180 days for team tournaments).
+  </Step>
+</Steps>
+
+<Note>
+  Tournament names cannot contain the word "lidraughts". To use your username as the tournament name, you need at least 10 rated games and an account at least 3 days old, or a verified title.
+</Note>
